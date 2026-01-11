@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .backdrop {
+        position: relative;
+        height: 400px;
+        margin-bottom: -150px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
+    }
+
+    .backdrop img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.4;
+    }
+
+    .movie-header {
+        position: relative;
+        display: flex;
+        gap: 30px;
+        align-items: flex-end;
+        padding-bottom: 30px;
+    }
+
+    .poster-container {
+        flex-shrink: 0;
+        width: 230px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #fff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .poster-container img {
+        width: 100%;
+        display: block;
+    }
+
+    .movie-details {
+        flex-grow: 1;
+        margin-bottom: 20px;
+    }
+
+    .movie-title {
+        font-family: 'Outfit', serif;
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.1;
+        color: #fff;
+    }
+
+    .movie-meta {
+        font-size: 1.2rem;
+        color: #9ab;
+        margin-top: 5px;
+    }
+
+    .movie-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn {
+        background: #456;
+        color: #dde;
+        padding: 8px 15px;
+        border-radius: 3px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+    }
+
+    .action-btn:hover {
+        background: #567;
+        color: #fff;
+    }
+
+    .overview {
+        margin-top: 30px;
+        color: #9ab;
+        line-height: 1.6;
+        font-size: 1.1rem;
+        max-width: 700px;
+    }
+
+    .crew-list {
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #89a;
+    }
+
+    .crew-list strong {
+        color: #bcd;
+    }
+</style>
+
+{% if movie %}
+{% if movie.backdrop_url %}
+<div class="backdrop">
+    <img src="{{ movie.backdrop_url }}" alt="Backdrop">
+</div>
+{% endif %}
+
+<div class="movie-header">
+    <div class="poster-container">
+        {% if movie.poster_url %}
+        <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+        {% else %}
+        <div style="height: 345px; background: #333;"></div>
+        {% endif %}
+    </div>
+    <div class="movie-details">
+        <h1 class="movie-title">{{ movie.title }}</h1>
+        <div class="movie-meta">
+            {{ movie.release_date|slice:":4" }}
+            {% if movie.directors %}
+            Directed by <span style="color: #fff;">{{ movie.directors|join:", " }}</span>
+            {% endif %}
+        </div>
+
+        <div class="crew-list">
+            {{ movie.runtime }} mins • {{ movie.genres|join:", " }}
+        </div>
+
+        <div class="movie-actions">
+            <button class="action-btn">👁 Watch</button>
+            <button class="action-btn">❤ Like</button>
+            <button class="action-btn">★ Rate</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="overview">
+        <h3
+            style="color: #fff; text-transform: uppercase; font-size: 0.9rem; border-bottom: 1px solid #444; padding-bottom: 5px;">
+            Synopsis</h3>
+        {{ movie.overview }}
+    </div>
+
+    <div style="margin-top: 50px; border-top: 1px solid #444; padding-top: 30px;">
+        <h3 style="color: #9ab;">Reviews</h3>
+
+        {% if user.is_authenticated %}
+        <div style="background: #2c3440; padding: 20px; border-radius: 4px; margin-bottom: 30px;">
+            <h4 style="margin-top: 0; color: #fff;">Write a Review</h4>
+            <form method="POST">
+                {% csrf_token %}
+                <div style="margin-bottom: 10px;">
+                    <label style="color: #9ab; font-size: 0.9rem;">Rating (1-5)</label>
+                    {{ form.rating }}
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="color: #9ab; font-size: 0.9rem;">Review</label>
+                    {{ form.content }}
+                </div>
+                <button class="btn" type="submit">Post Review</button>
+            </form>
+        </div>
+        {% else %}
+        <p><a href="{% url 'login' %}?next={{ request.path }}" style="color: #40bcf4;">Sign in</a> to leave a review.
+        </p>
+        {% endif %}
+
+        <div class="reviews-list">
+            {% for review in reviews %}
+            <div style="border-bottom: 1px solid #333; padding: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong style="color: #fff;">{{ review.user.username }}</strong>
+                    <span style="color: #00e054;">★ {{ review.rating }}</span>
+                </div>
+                <p style="color: #bcc; margin: 0;">{{ review.content }}</p>
+                <small style="color: #567;">{{ review.created_at|date:"M d, Y" }}</small>
+            </div>
+            {% empty %}
+            <p style="color: #777;">No reviews yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div style="padding: 50px; text-align: center;">
+    <h2>Movie not found</h2>
+    <a href="{% url 'movie-home' %}">Back to Home</a>
+</div>
+{% endif %}
+{% endblock content %}

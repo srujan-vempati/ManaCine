@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="content-section" style="max-width: 400px; margin: 0 auto;">
+    <h2 style="color: #fff; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 20px;">Sign In</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div style="color: #ff8000; font-size: 0.8rem; margin-top: 5px;">
+                {{ field.errors }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="form-group">
+            <button class="btn" type="submit">Login</button>
+        </div>
+    </form>
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            Need an account? <a class="ml-2" href="{% url 'register' %}">Sign Up</a>
+        </small>
+    </div>
+</div>
+{% endblock content %}
