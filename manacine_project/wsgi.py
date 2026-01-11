@@ -9,6 +9,13 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/wsgi/
 
 import os
 
+# Load .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "manacine_project.settings")

@@ -6,3 +6,4 @@ django-cloudinary-storage
 requests
 gunicorn
 whitenoise
+python-dotenv
