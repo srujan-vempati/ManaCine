@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="quiz-container" style="max-width: 600px; margin: 60px auto; background: var(--surface); padding: 40px; border-radius: 12px;">
+    <h2 style="text-align: center; margin-bottom: 20px;">Verify Watched Status</h2>
+    <p style="text-align: center; color: #ccc; margin-bottom: 30px;">Prove you watched <strong>{{ movie.title }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        {% for q in questions %}
+        <div style="margin-bottom: 30px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px;">
+            <p style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px;">{{ forloop.counter }}. {{ q.question }}</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for option in q.options %}
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; border: 1px solid #333; border-radius: 4px;">
+                    <input type="radio" name="question_{{ forloop.parentloop.counter0 }}" value="{{ option }}" required>
+                    <span>{{ option }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">Verify</button>
+    </form>
+</div>
+{% endblock %}

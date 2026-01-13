@@ -1,18 +1,242 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="content-section">
-    <div style="display: flex; align-items: center; gap: 20px;">
-        <img src="{{ user.profile.avatar.url }}" alt="Profile"
-            style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+<style>
+    .profile-header {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .profile-banner {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        /* height: auto;  Removed fixed height */
+        background: var(--surface);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        min-height: 200px;
+    }
+
+    .profile-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        /* Ensure full image is visible, fill gaps if ratio mismatch */
+        background: #000;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: flex-end;
+        padding: 0 40px;
+        margin-top: -60px;
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid var(--bg);
+        overflow: hidden;
+        background: #000;
+        margin-right: 20px;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-names h2 {
+        margin: 0;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+
+    .profile-names p {
+        margin: 0;
+        color: var(--text-mute);
+    }
+
+    .stats-bar {
+        background: var(--surface);
+        padding: 15px 30px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        border: 1px solid var(--border);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--primary);
+        /* Orange Labels */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .edit-modal {
+        background: var(--surface);
+        padding: 20px;
+        border-radius: 4px;
+        margin-top: 20px;
+        border: 1px solid var(--border);
+    }
+
+    .section-title {
+        color: var(--text-main);
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 5px;
+        margin: 30px 0 15px;
+    }
+</style>
+
+<div class="profile-header">
+    <div class="profile-banner">
+        {% if user.profile.banner_url %}
+        <img src="{{ user.profile.banner_url }}" alt="Banner">
+        {% else %}
+        <div style="width:100%; height:100%; background: linear-gradient(to right, #2c3440, #1e2328);"></div>
+        {% endif %}
+    </div>
+
+    <div class="profile-info">
+        <div class="profile-avatar">
+            <img src="{{ user.profile.avatar.url }}" alt="Avatar">
+        </div>
+        <div class="profile-names">
+            <h2>{{ user.username }}</h2>
+            <p>{{ user.profile.bio|default:"No bio yet." }}</p>
+        </div>
+        <div style="margin-left: auto; margin-bottom: 5px;">
+            <!-- Toggle Edit Form -->
+            <button onclick="document.getElementById('edit-form').style.display='block'" class="btn"
+                style="background: var(--surface); border: 1px solid var(--border); font-size:0.8rem;">Edit
+                Profile</button>
+        </div>
+    </div>
+</div>
+
+<div class="stats-bar">
+    <div class="stat-item">
+        <span class="stat-value">{{ reviews_count }}</span>
+        <span class="stat-label">Watched</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-value">{{ favorites_count }}</span>
+        <span class="stat-label">Favorites</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-value">0</span>
+        <span class="stat-label">Lists</span>
+    </div>
+</div>
+
+<div id="edit-form" class="edit-modal" style="display: none;">
+    <h4 style="color: #fff; margin-top: 0;">Edit Profile</h4>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Manual Form Rendering for styling -->
+        <div class="form-group">
+            <label>Bio</label>
+            {{ p_form.bio }}
+        </div>
+        <div class="form-group">
+            <label>Avatar</label>
+            {{ p_form.avatar }}
+        </div>
+        <button class="btn" type="submit">Save Changes</button>
+        <button type="button" class="btn" style="background: #e74c3c;"
+            onclick="document.getElementById('edit-form').style.display='none'">Cancel</button>
+    </form>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <div>
+        <h3 class="section-title">Favorite Movies</h3>
+        <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+            {% for fav in favorites %}
+            <div style="min-width: 100px; width: 100px; flex-shrink: 0;">
+                <a href="{% url 'movie-detail' fav.movie_id %}">
+                    {% if fav.poster_url %}
+                    <img src="{{ fav.poster_url }}" alt="Poster"
+                        style="width: 100%; border-radius: 4px; border: 1px solid #456;">
+                    {% else %}
+                    <div
+                        style="width: 100%; height: 150px; background: #333; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #456;">
+                        <span style="font-size:0.7rem; color: #777;">#{{ fav.movie_id }}</span>
+                    </div>
+                    {% endif %}
+                </a>
+            </div>
+            {% empty %}
+            <p style="color: #678;">No favorites yet.</p>
+            {% endfor %}
+        </div>
+
+        <h3 class="section-title">Recently Watched</h3>
+        <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+            {% for vid in watched_movies %}
+            <div style="min-width: 100px; width: 100px; flex-shrink: 0;">
+                <a href="{% url 'movie-detail' vid.movie_id %}">
+                    {% if vid.poster_url %}
+                    <img src="{{ vid.poster_url }}" alt="Poster"
+                        style="width: 100%; border-radius: 4px; border: 1px solid #456;">
+                    {% else %}
+                    <div
+                        style="width: 100%; height: 150px; background: #333; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #456;">
+                        <span style="font-size:0.7rem; color: #777;">watched</span>
+                    </div>
+                    {% endif %}
+                </a>
+            </div>
+            {% empty %}
+            <p style="color: #678;">No watched movies yet.</p>
+            {% endfor %}
+        </div>
+
+        <h3 class="section-title">Recent Reviews</h3>
         <div>
-            <h2 style="margin: 0;">{{ user.username }}</h2>
-            <p style="color: #9ab;">{{ user.email }}</p>
+            {% for review in recent_reviews %}
+            <div style="border-bottom: 1px solid #333; padding: 15px 0; display: flex; gap: 15px;">
+                <!-- Review Content -->
+                <div style="width: 100%;">
+                    <div style="font-weight: 600; color: #fff; margin-bottom: 5px;">
+                        <span style="color: #00e054;">★ {{ review.rating }}</span> on Movie #{{ review.movie_id }}
+                    </div>
+                    <p style="color: #bcc; margin: 0; font-size: 0.9rem;">{{ review.content }}</p>
+                    <small style="color: #567;">{{ review.created_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color: #678;">No reviews yet.</p>
+            {% endfor %}
         </div>
     </div>
 
-    <div style="margin-top: 30px;">
-        <h3 style="border-bottom: 1px solid #444; padding-bottom: 10px;">Recent Activity</h3>
-        <p>No activity yet.</p>
+    <div>
+        <h3 class="section-title">Stats</h3>
+        <div style="text-align: center; color: #555; padding: 20px; background: #222; border-radius: 4px;">
+            <div style="font-size: 2rem; color: #00e054;">{{ reviews_count }}</div>
+            <small>Films Watched</small>
+        </div>
     </div>
 </div>
+
 {% endblock content %}

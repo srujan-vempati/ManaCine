@@ -1,193 +1,409 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
-    .backdrop {
+    .backdrop-container {
         position: relative;
-        height: 400px;
-        margin-bottom: -150px;
-        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
-        -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
+        height: 60vh;
+        max-height: 500px;
+        min-height: 350px;
+        background-size: cover;
+        background-position: center 20%;
     }
 
-    .backdrop img {
+    .backdrop-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(18, 18, 18, 0.2) 0%, rgba(18, 18, 18, 0.8) 70%, var(--bg) 100%);
+    }
+
+    .content-max-width {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px;
+        position: relative;
+    }
+
+    .movie-header-section {
+        margin-top: -150px;
+        position: relative;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 40px;
+        align-items: flex-end;
+    }
+
+    .poster-wrapper {
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #1e1e1e;
+        aspect-ratio: 2/3;
+    }
+
+    .poster-wrapper img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0.4;
-    }
-
-    .movie-header {
-        position: relative;
-        display: flex;
-        gap: 30px;
-        align-items: flex-end;
-        padding-bottom: 30px;
-    }
-
-    .poster-container {
-        flex-shrink: 0;
-        width: 230px;
-        border-radius: 4px;
-        overflow: hidden;
-        border: 1px solid #fff;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    }
-
-    .poster-container img {
-        width: 100%;
         display: block;
     }
 
-    .movie-details {
-        flex-grow: 1;
-        margin-bottom: 20px;
-    }
-
-    .movie-title {
-        font-family: 'Outfit', serif;
-        font-size: 3rem;
-        font-weight: 700;
-        margin: 0;
+    .header-info h1 {
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin: 0 0 10px 0;
         line-height: 1.1;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
         color: #fff;
     }
 
-    .movie-meta {
-        font-size: 1.2rem;
-        color: #9ab;
-        margin-top: 5px;
-    }
-
-    .movie-actions {
-        margin-top: 20px;
+    .header-meta {
         display: flex;
-        gap: 10px;
+        gap: 15px;
+        align-items: center;
+        margin-bottom: 20px;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.8);
     }
 
-    .action-btn {
-        background: #456;
-        color: #dde;
-        padding: 8px 15px;
-        border-radius: 3px;
-        font-size: 0.9rem;
+    .meta-tag {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 10px;
+        border-radius: 4px;
+        backdrop-filter: blur(10px);
         font-weight: 600;
-        cursor: pointer;
-        border: none;
+        font-size: 0.85rem;
     }
 
-    .action-btn:hover {
-        background: #567;
+    .action-bar {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .btn-action {
+        background: rgba(30, 30, 30, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ddd;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-action:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #fff;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .btn-action.active {
+        background: rgba(255, 107, 0, 0.15);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 50px;
+        margin-top: 50px;
+    }
+
+    .section-label {
+        color: var(--primary);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .overview-text {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #ccc;
+        margin-bottom: 40px;
+    }
+
+    .crew-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 20px;
+    }
+
+    .crew-item strong {
+        display: block;
         color: #fff;
     }
 
-    .overview {
-        margin-top: 30px;
-        color: #9ab;
-        line-height: 1.6;
-        font-size: 1.1rem;
-        max-width: 700px;
-    }
-
-    .crew-list {
-        margin-top: 20px;
+    .crew-item span {
         font-size: 0.9rem;
-        color: #89a;
+        color: #888;
     }
 
-    .crew-list strong {
-        color: #bcd;
+    .review-card {
+        background: var(--surface);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        margin-bottom: 15px;
+    }
+
+    /* Horizontal Scroll Styles */
+    .scroll-container {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+
+    .scroll-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .scroll-container::-webkit-scrollbar-track {
+        background: var(--bg);
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 3px;
+    }
+
+    .cast-card,
+    .similar-card {
+        min-width: 140px;
+        max-width: 140px;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s;
+    }
+
+    .cast-card:hover,
+    .similar-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .cast-img,
+    .similar-img {
+        width: 100%;
+        border-radius: 6px;
+        object-fit: cover;
+        background: #222;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .cast-img {
+        aspect-ratio: 2/3;
+    }
+
+    .similar-img {
+        aspect-ratio: 2/3;
+    }
+
+    .cast-info,
+    .similar-info {
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+
+    .cast-info strong,
+    .similar-info strong {
+        display: block;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cast-info span {
+        font-size: 0.8rem;
+        color: #888;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 </style>
 
 {% if movie %}
-{% if movie.backdrop_url %}
-<div class="backdrop">
-    <img src="{{ movie.backdrop_url }}" alt="Backdrop">
+<!-- Backdrop Section -->
+<div class="backdrop-container" style="background-image: url('{{ movie.backdrop_url }}');">
+    <div class="backdrop-overlay"></div>
 </div>
-{% endif %}
 
-<div class="movie-header">
-    <div class="poster-container">
-        {% if movie.poster_url %}
-        <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
-        {% else %}
-        <div style="height: 345px; background: #333;"></div>
-        {% endif %}
-    </div>
-    <div class="movie-details">
-        <h1 class="movie-title">{{ movie.title }}</h1>
-        <div class="movie-meta">
-            {{ movie.release_date|slice:":4" }}
-            {% if movie.directors %}
-            Directed by <span style="color: #fff;">{{ movie.directors|join:", " }}</span>
+<!-- Header Section -->
+<div class="content-max-width">
+    <div class="movie-header-section">
+        <div class="poster-wrapper">
+            {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+            {% else %}
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; color:#555;">No Poster
+            </div>
             {% endif %}
         </div>
 
-        <div class="crew-list">
-            {{ movie.runtime }} mins • {{ movie.genres|join:", " }}
-        </div>
-
-        <div class="movie-actions">
-            <button class="action-btn">👁 Watch</button>
-            <button class="action-btn">❤ Like</button>
-            <button class="action-btn">★ Rate</button>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-    <div class="overview">
-        <h3
-            style="color: #fff; text-transform: uppercase; font-size: 0.9rem; border-bottom: 1px solid #444; padding-bottom: 5px;">
-            Synopsis</h3>
-        {{ movie.overview }}
-    </div>
-
-    <div style="margin-top: 50px; border-top: 1px solid #444; padding-top: 30px;">
-        <h3 style="color: #9ab;">Reviews</h3>
-
-        {% if user.is_authenticated %}
-        <div style="background: #2c3440; padding: 20px; border-radius: 4px; margin-bottom: 30px;">
-            <h4 style="margin-top: 0; color: #fff;">Write a Review</h4>
-            <form method="POST">
-                {% csrf_token %}
-                <div style="margin-bottom: 10px;">
-                    <label style="color: #9ab; font-size: 0.9rem;">Rating (1-5)</label>
-                    {{ form.rating }}
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="color: #9ab; font-size: 0.9rem;">Review</label>
-                    {{ form.content }}
-                </div>
-                <button class="btn" type="submit">Post Review</button>
-            </form>
-        </div>
-        {% else %}
-        <p><a href="{% url 'login' %}?next={{ request.path }}" style="color: #40bcf4;">Sign in</a> to leave a review.
-        </p>
-        {% endif %}
-
-        <div class="reviews-list">
-            {% for review in reviews %}
-            <div style="border-bottom: 1px solid #333; padding: 20px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <strong style="color: #fff;">{{ review.user.username }}</strong>
-                    <span style="color: #00e054;">★ {{ review.rating }}</span>
-                </div>
-                <p style="color: #bcc; margin: 0;">{{ review.content }}</p>
-                <small style="color: #567;">{{ review.created_at|date:"M d, Y" }}</small>
+        <div class="header-info">
+            <h1>{{ movie.title }}</h1>
+            <div class="header-meta">
+                {% if movie.release_date != 'N/A' %}
+                <span class="meta-tag">{{ movie.release_date|slice:":4" }}</span>
+                {% endif %}
+                <span class="meta-tag">{{ movie.runtime }} min</span>
+                <span style="color: var(--primary); font-weight: 700;">TMDB {{ movie.rating|floatformat:1 }}</span>
+                <span>{{ movie.genres|join:", " }}</span>
             </div>
-            {% empty %}
-            <p style="color: #777;">No reviews yet.</p>
+
+            <div class="action-bar">
+                <!-- Favorite -->
+                <a href="{% url 'toggle-favorite' movie.id %}"
+                    class="btn-action {% if is_favorited %}active{% endif %}">
+                    {% if is_favorited %}♥ Liked{% else %}♡ Like{% endif %}
+                </a>
+
+                <!-- Watch -->
+                <a href="{% url 'toggle-watched' movie.id %}" class="btn-action {% if is_watched %}active{% endif %}">
+                    {% if is_watched %}👁 Watched{% else %}👁 Mark Watched{% endif %}
+                </a>
+
+                <!-- Banner -->
+                <a href="{% url 'set-banner' movie.id %}" class="btn-action">
+                    🖼 Set as Banner
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Left Column: Overview -->
+        <div>
+            <span class="section-label">Synopsis</span>
+            <p class="overview-text">{{ movie.overview }}</p>
+        </div>
+
+        <!-- Right Column: Details -->
+        <div>
+            <span class="section-label">Directed By</span>
+            <div class="crew-grid">
+                {% for director in movie.directors %}
+                <div class="crew-item">
+                    <strong>{{ director.name }}</strong>
+                    <span>Director</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div> <!-- End Main Grid -->
+
+    <!-- Cast Section (Full Width) -->
+    <div style="margin-top: 60px;">
+        <span class="section-label">Top Cast</span>
+        <div class="scroll-container">
+            {% for actor in movie.cast %}
+            <a href="{% url 'person-detail' actor.id %}" class="cast-card">
+                <img src="{{ actor.profile_url|default:'https://via.placeholder.com/150x225?text=No+Image' }}"
+                    alt="{{ actor.name }}" class="cast-img">
+                <div class="cast-info">
+                    <strong>{{ actor.name }}</strong>
+                    <span>{{ actor.character }}</span>
+                </div>
+            </a>
             {% endfor %}
         </div>
     </div>
-</div>
 
-{% else %}
-<div style="padding: 50px; text-align: center;">
-    <h2>Movie not found</h2>
-    <a href="{% url 'movie-home' %}">Back to Home</a>
-</div>
-{% endif %}
-{% endblock content %}
+    <!-- Similar Movies (Full Width) -->
+    <div style="margin-top: 60px; margin-bottom: 60px;">
+        <span class="section-label">You Might Also Like</span>
+        <div class="scroll-container">
+            {% for item in movie.similar %}
+            <a href="{% url 'movie-detail' item.id %}" class="similar-card">
+                <img src="{{ item.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
+                    alt="{{ item.title }}" class="similar-img">
+                <div class="similar-info">
+                    <strong>{{ item.title }}</strong>
+                    <span style="color:var(--primary); font-size:0.8rem;">★ {{ item.rating|floatformat:1 }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- User Reviews (Full Width) -->
+    <div style="margin-top: 60px; margin-bottom: 60px; max-width: 800px;">
+        <span class="section-label">User Reviews</span>
+        {% if user.is_authenticated %}
+        {% if is_watched %}
+        <form method="post" action="{% url 'add-review' movie.id %}" class="review-form"
+            style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px;">
+            {% csrf_token %}
+            <h4 style="margin-top:0; margin-bottom: 15px; color:#fff;">Leave a Review</h4>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#ccc;">Rating</label>
+                {{ form.rating }}
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#ccc;">Your Review</label>
+                {{ form.content }}
+            </div>
+            <button type="submit" class="btn-action"
+                style="background:var(--primary); border:none; justify-content:center;">Post
+                Review</button>
+        </form>
+        {% else %}
+        <div class="review-form"
+            style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; text-align:center;">
+            <p style="font-size: 1.1rem; color: #ccc; margin-bottom: 20px;">
+                You need to mark this movie as <strong>Watched</strong> before you can share your
+                review.
+            </p>
+            <p style="color: var(--text-mute); font-size: 0.9rem;">
+                (Click the "Mark as Watched" button at the top to unlock reviews)
+            </p>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="review-form"
+            style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; text-align:center;">
+            <p><a href="{% url 'login' %}" style="color:var(--primary);">Sign in</a> to leave a review.
+            </p>
+        </div>
+        {% endif %}
+
+        {% for review in reviews %}
+        <div class="review-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <strong style="color: var(--primary);">{{ review.user.username }}</strong>
+                <span style="color: #888; font-size:0.9rem;">{{ review.created_at|date:"M d, Y"
+                    }}</span>
+            </div>
+            <div style="margin-bottom:10px; color: #ffbf00;">
+                {% if review.rating == 5 %}★★★★★{% elif review.rating == 4 %}★★★★{% elif review.rating
+                == 3
+                %}★★★{% elif review.rating == 2 %}★★{% else %}★{% endif %}
+            </div>
+            <p style="margin:0; color:#ddd; line-height:1.5;">{{ review.content }}</p>
+        </div>
+        {% empty %}
+        <p style="color:#666; font-style:italic;">No reviews yet. Be the first!</p>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding: 100px; text-align: center;">
+        <h2>Movie not found.</h2>
+        <a href="/" class="btn-action" style="display:inline-flex;">Back Home</a>
+    </div>
+    {% endif %}
+    {% endblock content %}

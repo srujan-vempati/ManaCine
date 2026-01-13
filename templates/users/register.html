@@ -1,30 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="content-section" style="max-width: 400px; margin: 0 auto;">
-    <h2 style="color: #fff; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 20px;">Join Manacine
-    </h2>
-    <form method="POST">
-        {% csrf_token %}
-        <!-- Simple rendering for now, can be improved with crispy forms or manual loop -->
-        {% for field in form %}
-        <div class="form-group">
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-            <div style="color: #ff8000; font-size: 0.8rem; margin-top: 5px;">
-                {{ field.errors }}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div class="auth-card" style="width: 100%; max-width: 440px;">
+        <h2 style="text-align: center; margin-bottom: 30px; color: #fff; font-weight: 700; letter-spacing: -0.5px;">Join
+            ManaCine</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div style="color: #ff6b6b; font-size: 0.85rem; margin-top: 5px; font-weight: 500;">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+            {% endfor %}
+            <div class="form-group" style="margin-top: 30px;">
+                <button class="btn btn-primary" type="submit"
+                    style="width: 100%; padding: 14px; font-size: 1rem; border-radius: 8px;">Create Account</button>
+            </div>
+        </form>
+        <div
+            style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <small style="color: #aaa; font-size: 0.95rem;">
+                Already have an account? <a href="{% url 'login' %}"
+                    style="color: var(--primary); font-weight: 600;">Sign In</a>
+            </small>
         </div>
-        {% endfor %}
-        <div class="form-group">
-            <button class="btn" type="submit">Sign Up</button>
-        </div>
-    </form>
-    <div class="border-top pt-3">
-        <small class="text-muted">
-            Already have an account? <a class="ml-2" href="{% url 'login' %}">Sign In</a>
-        </small>
     </div>
 </div>
 {% endblock content %}

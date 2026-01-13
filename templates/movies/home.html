@@ -64,32 +64,241 @@
     }
 </style>
 
-<div class="welcome-banner">
-    <h1>Welcome to Manacine.</h1>
-    <p>The social network for Telugu film lovers.</p>
-</div>
+<style>
+    .hero-section {
+        padding: 80px 0 40px;
+        text-align: center;
+        background: linear-gradient(to bottom, #161616 0%, var(--bg) 100%);
+        border-bottom: 1px solid var(--border);
+    }
 
-<h3
-    style="border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; font-size: 0.9rem; color: #9ab;">
-    Popular Telugu Movies</h3>
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+        position: relative;
+    }
 
-<div class="movies-grid">
-    {% for movie in movies %}
-    <a href="{% url 'movie-detail' movie.id %}" class="movie-card">
-        {% if movie.poster_url %}
-        <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
-        {% else %}
-        <div
-            style="height: 225px; background: #333; display: flex; align-items: center; justify-content: center; color: #777;">
-            No Poster</div>
-        {% endif %}
-        <div class="movie-info">
-            <div style="font-weight: 600; font-size: 0.9rem;">{{ movie.title }}</div>
-            <div style="font-size: 0.8rem; color: #ccc;">{{ movie.release_date|slice:":4" }}</div>
+    .search-input {
+        width: 100%;
+        padding: 15px 25px;
+        border-radius: 50px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: #fff;
+        font-size: 1.1rem;
+        outline: none;
+        transition: all 0.2s;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 4px 25px rgba(255, 107, 0, 0.15);
+    }
+
+    /* Horizontal Scroll Section */
+    .category-section {
+        margin-bottom: 50px;
+        position: relative;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 0 40px;
+        /* Align with content */
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        border-left: 4px solid var(--primary);
+        padding-left: 15px;
+    }
+
+    .scroll-container {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding: 10px 40px 30px;
+        /* Side padding + bottom for shadow */
+        scroll-behavior: smooth;
+    }
+
+    .scroll-container::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .scroll-container::-webkit-scrollbar-track {
+        background: var(--bg);
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+    }
+
+    .scroll-container::-webkit-scrollbar-thumb:hover {
+        background: var(--primary);
+    }
+
+    .movie-card-row {
+        min-width: 160px;
+        max-width: 160px;
+        display: block;
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--surface);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        border: 1px solid transparent;
+        text-decoration: none;
+    }
+
+    .movie-card-row:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .movie-poster-row {
+        width: 100%;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+        display: block;
+    }
+
+    .movie-info-row {
+        padding: 10px;
+    }
+
+    .movie-title-row {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0 0 5px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .movie-meta-row {
+        font-size: 0.8rem;
+        color: var(--text-mute);
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+
+<div class="hero-section">
+    <div class="container" style="margin: 0 auto; max-width: 800px;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -1px;">ManaCine</h1>
+        <p style="color: var(--text-mute); margin-bottom: 30px; font-size: 1.1rem;">Discover the best of Telugu Cinema.
+        </p>
+
+        <div class="search-container">
+            <form method="get" action=".">
+                <input type="text" name="q" class="search-input" placeholder="Search for 'Devara', 'RRR'..."
+                    value="{{ query|default:'' }}">
+            </form>
         </div>
-    </a>
-    {% empty %}
-    <p>No movies found. (Check API Key)</p>
-    {% endfor %}
+    </div>
 </div>
-{% endblock content %}
+
+<div style="margin-top: 40px;">
+    {% if query %}
+    <div class="container">
+        <div class="section-header" style="padding: 0;">
+            <h2 class="section-title">Search Results for "{{ query }}"</h2>
+        </div>
+        <div class="movies-grid-refined">
+            {% for movie in search_results %}
+            <!-- Reuse Card Style logic or duplicate for grid -->
+            <a href="{% url 'movie-detail' movie.id %}" class="movie-card-refined">
+                <img src="{{ movie.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
+                    class="movie-poster">
+                <div class="movie-info">
+                    <h3 class="movie-title-card">{{ movie.title }}</h3>
+                    <div class="movie-meta-card">
+                        <span>{{ movie.release_date|slice:":4" }}</span>
+                        <span style="color: var(--primary);">★ {{ movie.rating|floatformat:1 }}</span>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <p style="text-align:center; color:#777; width:100%;">No results found.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Recent Releases -->
+    <div class="category-section">
+        <div class="section-header">
+            <h2 class="section-title">Just Released</h2>
+        </div>
+        <div class="scroll-container">
+            {% for movie in recent_releases %}
+            <a href="{% url 'movie-detail' movie.id %}" class="movie-card-row">
+                <img src="{{ movie.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
+                    class="movie-poster-row" loading="lazy">
+                <div class="movie-info-row">
+                    <h3 class="movie-title-row">{{ movie.title }}</h3>
+                    <div class="movie-meta-row">
+                        <span>{{ movie.release_date|slice:":4" }}</span>
+                        <span style="color: var(--primary);">★ {{ movie.rating|floatformat:1 }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Hits -->
+    <div class="category-section">
+        <div class="section-header">
+            <h2 class="section-title">Recent Hits & Critically Acclaimed</h2>
+        </div>
+        <div class="scroll-container">
+            {% for movie in top_rated %}
+            <a href="{% url 'movie-detail' movie.id %}" class="movie-card-row">
+                <img src="{{ movie.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
+                    class="movie-poster-row" loading="lazy">
+                <div class="movie-info-row">
+                    <h3 class="movie-title-row">{{ movie.title }}</h3>
+                    <div class="movie-meta-row">
+                        <span>{{ movie.release_date|slice:":4" }}</span>
+                        <span style="color: var(--primary);">★ {{ movie.rating|floatformat:1 }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Popular -->
+    <div class="category-section">
+        <div class="section-header">
+            <h2 class="section-title">Trending Now</h2>
+        </div>
+        <div class="scroll-container">
+            {% for movie in popular_movies %}
+            <a href="{% url 'movie-detail' movie.id %}" class="movie-card-row">
+                <img src="{{ movie.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
+                    class="movie-poster-row" loading="lazy">
+                <div class="movie-info-row">
+                    <h3 class="movie-title-row">{{ movie.title }}</h3>
+                    <div class="movie-meta-row">
+                        <span>{{ movie.release_date|slice:":4" }}</span>
+                        <span style="color: var(--primary);">★ {{ movie.rating|floatformat:1 }}</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div> {% endblock content %}

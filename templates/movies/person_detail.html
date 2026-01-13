@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .profile-header {
+        display: flex;
+        gap: 40px;
+        margin-bottom: 50px;
+        align-items: flex-start;
+    }
+
+    .profile-img {
+        width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .profile-info h1 {
+        font-size: 3rem;
+        margin: 0 0 10px;
+        color: #fff;
+    }
+
+    .bio-text {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #ddd;
+        max-width: 800px;
+        margin-top: 20px;
+    }
+
+    .meta-grid {
+        display: flex;
+        gap: 30px;
+        margin: 20px 0;
+        color: var(--text-mute);
+    }
+
+    .filmography-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 25px;
+    }
+
+    .movie-card {
+        text-decoration: none;
+        display: block;
+        transition: transform 0.2s;
+    }
+
+    .movie-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .poster {
+        width: 100%;
+        aspect-ratio: 2/3;
+        border-radius: 6px;
+        object-fit: cover;
+        background: #222;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="container">
+    {% if person %}
+    <div class="profile-header">
+        <div>
+            {% if person.profile_url %}
+            <img src="{{ person.profile_url }}" alt="{{ person.name }}" class="profile-img">
+            {% else %}
+            <div class="profile-img"
+                style="height:450px; background:#222; display:flex; align-items:center; justify-content:center; color:#666;">
+                No Image</div>
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <h1>{{ person.name }}</h1>
+            <div class="meta-grid">
+                {% if person.birthday %}<div><strong>Born:</strong> {{ person.birthday }}</div>{% endif %}
+                {% if person.place_of_birth %}<div><strong>Place:</strong> {{ person.place_of_birth }}</div>{% endif %}
+            </div>
+
+            {% if person.biography %}
+            <h3 style="color:#fff; margin-bottom:10px;">Biography</h3>
+            <p class="bio-text">{{ person.biography|truncatewords:150 }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="margin-top: 50px;">
+        <h2 style="color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 30px;">
+            Filmography</h2>
+        <div class="filmography-grid">
+            {% for movie in person.movies %}
+            <a href="{% url 'movie-detail' movie.id %}" class="movie-card">
+                <img src="{{ movie.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
+                    class="poster">
+                <div>
+                    <strong style="color:#fff; display:block;">{{ movie.title }}</strong>
+                    <span style="color:var(--text-mute); font-size:0.9rem;">
+                        {{ movie.year }}
+                        {% if movie.character %} as {{ movie.character }}{% endif %}
+                        {% if movie.role == 'Director' %} (Director){% endif %}
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:100px;">
+        <h2>Person not found</h2>
+        <a href="/" style="color:var(--primary);">Back Home</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
