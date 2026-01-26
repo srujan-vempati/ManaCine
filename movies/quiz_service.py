@@ -1,105 +1,123 @@
-import os
 import json
 import requests
 import random
 
 class QuizService:
     def __init__(self):
-        self.api_key = os.environ.get('GEMINI_API_KEY')
-        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.api_key}"
+        # Ollama local endpoint
+        self.api_url = "https://unsanguine-rosette-impressibly.ngrok-free.dev/api/generate"
+        self.model = "llama3.2" # Using the user-approved small model
 
     def generate_quiz(self, movie_title, movie_overview):
-        if not self.api_key:
-            print("DEBUG: GEMINI_API_KEY is missing!")
-            return None
-        print(f"DEBUG: Using API Key starting with: {self.api_key[:5]}...")
+        print(f"DEBUG: Generating quiz for '{movie_title}' using Ollama ({self.model})...")
 
         prompt = f"""
-        Generate 2 HARD, UNIQUE multiple-choice questions about the PLOT of the movie "{movie_title}".
-        Context: {movie_overview}
+        Read the movie description below and generate 1 multiple-choice question based ONLY on it.
         
-        RULES:
-        1. Questions must be about specific STORY events, CLIMAX details, or CHARACTER decisions.
-        2. DO NOT ask about Release Year, Actors, Directors, or Box Office.
-        3. The goal is to verify if the user has TRULY watched the movie.
-        4. Provide 4 options for each question (1 correct, 3 plausible but wrong).
+        MOVIE DESCRIPTION:
+        "{movie_overview}"
         
-        Return ONLY a raw JSON object with this structure:
-        [
-            {{
-                "question": "Specific question about a scene?",
-                "options": ["Option A", "Option B", "Option C", "Option D"],
-                "correct_answer": "Option A"
-            }},
-            ...
-        ]
+        REQUIREMENTS:
+        1. Question MUST be based on the text above.
+        2. Verify that the user paid attention to the plot.
+        3. 4 options (1 correct, 3 wrong).
+        
+        JSON FORMAT ONLY:
+        {{
+            "question": "Question text here",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correct_answer": "Option A"
+        }}
+        IMPORTANT: "correct_answer" MUST be one of the exact strings from "options", NOT just "A" or "B".
         """
 
         payload = {
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }]
+            "model": self.model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json",
+            "options": {
+                "temperature": 0.3, # Low temperature for factual accuracy (less hallucination)
+                "num_predict": 150, # Limit output tokens for SPEED
+                "top_k": 20,
+                "top_p": 0.9
+            }
         }
 
-        # Try multiple models to avoid Rate Limits (429)
-        models = [
-            "gemini-2.0-flash",
-            "gemini-2.5-flash",
-            "gemini-flash-latest", 
-            "gemini-pro"
-        ]
-        
-        from requests.adapters import HTTPAdapter
-        from urllib3.util.retry import Retry
-        
-        session = requests.Session()
-        retries = Retry(total=2, backoff_factor=1, status_forcelist=[500, 502, 503])
-        session.mount('https://', HTTPAdapter(max_retries=retries))
-
-        data = None
-        for model in models:
-            try:
-                print(f"DEBUG: Trying model {model}...")
-                current_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.api_key}"
-                timeout = 10 if model != models[-1] else 20
-                
-                response = session.post(current_url, json=payload, timeout=timeout)
-                
-                if response.status_code == 429:
-                    print(f"DEBUG: Model {model} hit Rate Limit (429). Switching...")
-                    continue 
-                
-                response.raise_for_status()
-                data = response.json()
-                break # Success
-                
-            except Exception as e:
-                print(f"DEBUG: Model {model} failed: {e}")
-                if model == models[-1]:
-                    # All failed
-                    return None
-        
-        if not data:
-            return None
-
         try:
-            # Extract text from Gemini response
-            text_content = data['candidates'][0]['content']['parts'][0]['text']
-            print(f"DEBUG: Raw Gemini response: {text_content}") 
+            # High timeout because local inference can be slow on CPU
+            response = requests.post(self.api_url, json=payload, timeout=60)
+            response.raise_for_status()
             
-            # Robust JSON extraction
-            import re
-            json_match = re.search(r'\[.*\]', text_content, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(0)
-                quiz_data = json.loads(json_str)
-                return quiz_data
-            else:
-                quiz_data = json.loads(text_content.strip())
-                return quiz_data
+            data = response.json()
+            text_content = data.get('response', '')
             
+            print(f"DEBUG: Raw Ollama response: {text_content[:200]}...") # Log first 200 chars
+
+            # Parse JSON
+            try:
+                quiz_data = json.loads(text_content)
+                
+                # Normalize response to a list of questions
+                if isinstance(quiz_data, dict):
+                    # Check if it has "question" key directly
+                    if "question" in quiz_data:
+                        quiz_data = [quiz_data]
+                    # Check if it has "questions" key (list or dict)
+                    elif "questions" in quiz_data:
+                        if isinstance(quiz_data["questions"], list):
+                            quiz_data = quiz_data["questions"]
+                        elif isinstance(quiz_data["questions"], dict):
+                            quiz_data = [quiz_data["questions"]]
+                    # Handle "question1", "question2" pattern
+                    elif any(k.startswith("question") for k in quiz_data.keys()):
+                        # Try to extract values that look like question objects
+                        temp_list = []
+                        for k, v in quiz_data.items():
+                            if isinstance(v, dict) and "question" in v:
+                                temp_list.append(v)
+                            elif isinstance(v, str) and k.startswith("question"):
+                                # If flat structure like {"question1": "Text", "options1": ...} - too complex, assume object
+                                pass
+                        if temp_list:
+                            quiz_data = temp_list
+                        else:
+                             # Last resort: just wrap the whole dict if it looks reasonable? 
+                             # No, safer to fail to backup if fuzzy.
+                             pass
+
+                if not isinstance(quiz_data, list):
+                    print("DEBUG: Ollama returned invalid JSON structure (not a list).")
+                    return None
+                
+                # FIX: Convert letter/number answers to actual text
+                for q in quiz_data:
+                    correct = q.get('correct_answer', '')
+                    options = q.get('options', [])
+                    
+                    # Check if answer is a letter (A, B, C, D) or number (0, 1, 2, 3)
+                    if correct in ['A', 'B', 'C', 'D']:
+                        idx = ord(correct) - ord('A')
+                        if 0 <= idx < len(options):
+                            q['correct_answer'] = options[idx]
+                            print(f"DEBUG: Converted '{correct}' to '{options[idx]}'")
+                    elif correct.isdigit():
+                        idx = int(correct)
+                        if 0 <= idx < len(options):
+                            q['correct_answer'] = options[idx]
+                            print(f"DEBUG: Converted '{correct}' to '{options[idx]}'")
+                    
+                return quiz_data
+                
+            except json.JSONDecodeError as e:
+                print(f"DEBUG: Failed to parse JSON from Ollama: {e}")
+                return None
+
+        except requests.exceptions.ConnectionError:
+            print("DEBUG: Could not connect to Ollama. Is it running? (ollama serve)")
+            return None
         except Exception as e:
-            print(f"Error parsing quiz: {e}")
+            print(f"DEBUG: Ollama generation failed: {e}")
             return None
 
     def generate_backup_quiz(self, movie):

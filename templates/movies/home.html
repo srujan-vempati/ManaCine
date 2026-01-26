@@ -66,39 +66,39 @@
 
 <style>
     .hero-section {
-        padding: 80px 0 40px;
+        padding: 60px 0 30px;
         text-align: center;
-        background: linear-gradient(to bottom, #161616 0%, var(--bg) 100%);
-        border-bottom: 1px solid var(--border);
+        background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+        border-bottom: 1px solid var(--glass-border);
     }
 
     .search-container {
-        max-width: 600px;
+        max-width: 550px;
         margin: 0 auto;
         position: relative;
     }
 
     .search-input {
         width: 100%;
-        padding: 15px 25px;
+        padding: 14px 25px;
         border-radius: 50px;
-        background: var(--surface);
-        border: 1px solid var(--border);
+        background: rgba(20, 20, 20, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
         color: #fff;
-        font-size: 1.1rem;
+        font-size: 1rem;
         outline: none;
         transition: all 0.2s;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
 
     .search-input:focus {
         border-color: var(--primary);
-        box-shadow: 0 4px 25px rgba(255, 107, 0, 0.15);
+        background: rgba(20, 20, 20, 0.8);
     }
 
     /* Horizontal Scroll Section */
     .category-section {
-        margin-bottom: 50px;
+        margin-bottom: 40px;
         position: relative;
     }
 
@@ -108,61 +108,52 @@
         justify-content: space-between;
         margin-bottom: 20px;
         padding: 0 40px;
-        /* Align with content */
     }
 
     .section-title {
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: #fff;
         margin: 0;
-        border-left: 4px solid var(--primary);
-        padding-left: 15px;
+        border-left: 3px solid var(--primary);
+        padding-left: 12px;
     }
 
     .scroll-container {
         display: flex;
-        gap: 20px;
+        gap: 16px;
         overflow-x: auto;
-        padding: 10px 40px 30px;
-        /* Side padding + bottom for shadow */
+        padding: 5px 40px 20px;
         scroll-behavior: smooth;
+        scrollbar-width: thin;
     }
 
     .scroll-container::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .scroll-container::-webkit-scrollbar-track {
-        background: var(--bg);
+        height: 6px;
     }
 
     .scroll-container::-webkit-scrollbar-thumb {
-        background: #333;
+        background: #444;
         border-radius: 4px;
     }
 
-    .scroll-container::-webkit-scrollbar-thumb:hover {
-        background: var(--primary);
-    }
-
     .movie-card-row {
-        min-width: 160px;
-        max-width: 160px;
+        min-width: 140px;
+        max-width: 140px;
         display: block;
         border-radius: 8px;
         overflow: hidden;
-        background: var(--surface);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        background: var(--surface-color);
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         position: relative;
-        border: 1px solid transparent;
         text-decoration: none;
+        border: 1px solid transparent;
     }
 
     .movie-card-row:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        border-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
     }
 
     .movie-poster-row {
@@ -177,60 +168,113 @@
     }
 
     .movie-title-row {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 600;
         color: #fff;
-        margin: 0 0 5px 0;
+        margin: 0 0 4px 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .movie-meta-row {
-        font-size: 0.8rem;
-        color: var(--text-mute);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
         display: flex;
         justify-content: space-between;
     }
 </style>
 
 <div class="hero-section">
-    <div class="container" style="margin: 0 auto; max-width: 800px;">
-        <h1 style="font-size: 2.5rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -1px;">ManaCine</h1>
-        <p style="color: var(--text-mute); margin-bottom: 30px; font-size: 1.1rem;">Discover the best of Telugu Cinema.
-        </p>
+    <div class="container" style="margin: 0 auto; max-width: 800px; padding:0;">
+        <h1
+            style="font-size: 2.2rem; margin-bottom: 8px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(to right, #fff, #bbb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            ManaCine</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 1rem;">Discover the best of Telugu
+            Cinema.</p>
 
         <div class="search-container">
             <form method="get" action=".">
-                <input type="text" name="q" class="search-input" placeholder="Search for 'Devara', 'RRR'..."
+                <input type="text" name="q" class="search-input" placeholder="Search movies..."
                     value="{{ query|default:'' }}">
             </form>
+
+            <!-- Genre Pills -->
+            <div style="display:flex; justify-content:center; gap:8px; margin-top:20px; flex-wrap:wrap;">
+                {% for g in genres %}
+                <a href="/?genre={{ g.id }}" style="background: {% if g.active %}var(--primary){% else %}rgba(255,255,255,0.08){% endif %};
+                          color:#eee; padding:5px 14px; border-radius:30px; font-size:0.85rem; border:1px solid rgba(255,255,255,0.05);
+                          transition:all 0.2s; text-decoration:none;">
+                    {{ g.name }}
+                </a>
+                {% endfor %}
+                {% if genre or query %}
+                <a href="/" style="color:#888; padding:5px 12px; font-size:0.85rem; text-decoration:none;">Clear</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
-<div style="margin-top: 40px;">
-    {% if query %}
+<div style="margin-top: 30px;">
+    {% if query or is_genre_filter %}
     <div class="container">
-        <div class="section-header" style="padding: 0;">
-            <h2 class="section-title">Search Results for "{{ query }}"</h2>
+        <div class="section-header" style="padding: 0; margin-bottom: 20px;">
+            <h2 class="section-title">
+                {% if query %}Search Results : "{{ query }}"
+                {% else %}{{ genre_name }} Movies{% endif %}
+            </h2>
         </div>
+
+        <style>
+            .movies-grid-refined {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 20px;
+            }
+
+            .movie-card-refined {
+                display: block;
+                background: var(--surface-color);
+                border-radius: 8px;
+                overflow: hidden;
+                transition: transform 0.2s;
+                border: 1px solid var(--glass-border);
+                text-decoration: none;
+            }
+
+            .movie-card-refined:hover {
+                transform: translateY(-5px);
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+
+            .movie-poster {
+                width: 100%;
+                aspect-ratio: 2/3;
+                object-fit: cover;
+                display: block;
+            }
+
+            .movie-info-row {
+                padding: 10px;
+            }
+        </style>
+
         <div class="movies-grid-refined">
             {% for movie in search_results %}
-            <!-- Reuse Card Style logic or duplicate for grid -->
             <a href="{% url 'movie-detail' movie.id %}" class="movie-card-refined">
                 <img src="{{ movie.poster_url|default:'https://via.placeholder.com/200x300?text=No+Image' }}"
                     class="movie-poster">
-                <div class="movie-info">
-                    <h3 class="movie-title-card">{{ movie.title }}</h3>
-                    <div class="movie-meta-card">
+                <div class="movie-info-row">
+                    <h3 class="movie-title-row">{{ movie.title }}</h3>
+                    <div class="movie-meta-row">
                         <span>{{ movie.release_date|slice:":4" }}</span>
                         <span style="color: var(--primary);">★ {{ movie.rating|floatformat:1 }}</span>
                     </div>
                 </div>
             </a>
             {% empty %}
-            <p style="text-align:center; color:#777; width:100%;">No results found.</p>
+            <p style="text-align:center; color:#777; width:100%; grid-column: 1/-1;">No movies found.</p>
             {% endfor %}
         </div>
     </div>

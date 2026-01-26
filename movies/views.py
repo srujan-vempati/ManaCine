@@ -8,14 +8,37 @@ from django.contrib.auth.decorators import login_required
 def home(request):
     service = TMDBService()
     query = request.GET.get('q')
+    genre_id = request.GET.get('genre')
     
+    context = {'query': query, 'genre': genre_id}
     
-    context = {'query': query}
+    # Common Telugu Genres
+    genres_data = [
+        {'id': 28, 'name': 'Action'},
+        {'id': 35, 'name': 'Comedy'},
+        {'id': 18, 'name': 'Drama'},
+        {'id': 10749, 'name': 'Romance'},
+        {'id': 53, 'name': 'Thriller'},
+        {'id': 27, 'name': 'Horror'},
+        {'id': 10751, 'name': 'Family'}
+    ]
     
-    choice_list = []
+    # Mark active
+    for g in genres_data:
+        g['active'] = (str(g['id']) == str(genre_id)) if genre_id else False
+        
+    context['genres'] = genres_data
     
     if query:
         context['search_results'] = service.search_telugu_movies(query)
+    elif genre_id:
+        context['search_results'] = service.get_movies_by_genre(genre_id)
+        context['is_genre_filter'] = True
+        # Find genre name
+        for g in context['genres']:
+            if str(g['id']) == str(genre_id):
+                context['genre_name'] = g['name']
+                break
     else:
         # Parallel Fetch for Instant Load
         tasks = [
@@ -111,29 +134,45 @@ def take_quiz(request, movie_id):
 
     if request.method == 'POST':
         # Verify Answers
-        score = 0
-        total = 2
-        
         quiz_data = request.session.get(f'quiz_{movie_id}')
         if not quiz_data:
             messages.error(request, "Quiz session expired. Please refresh.")
             return redirect('take-quiz', movie_id=movie_id)
+            
+        score = 0
+        total = len(quiz_data)
+        
+
 
         for i, q in enumerate(quiz_data):
             user_answer = request.POST.get(f'question_{i}')
-            if user_answer == q['correct_answer']:
+            correct_answer = q.get('correct_answer')
+            
+            # Use strip() to handle potential whitespace issues
+            if user_answer and correct_answer and user_answer.strip() == correct_answer.strip():
                 score += 1
         
         if score == total:
-            # Success!
-            Watched.objects.create(user=request.user, movie_id=movie_id)
+            # Success! Save with metadata
+            service = TMDBService()
+            movie = service.get_movie_details(movie_id)
+            
+            watched = Watched.objects.create(user=request.user, movie_id=movie_id)
+            if movie:
+                watched.title = movie.get('title')
+                watched.poster_url = movie.get('poster_url')
+                watched.save()
+            
             if f'quiz_{movie_id}' in request.session:
                 del request.session[f'quiz_{movie_id}']
             
-            messages.success(request, f"Correct! You scored {score}/{total}. Movie marked as Watched.")
+            messages.success(request, f"Correct! Movie marked as Watched.")
             return redirect('movie-detail', movie_id=movie_id)
         else:
-            messages.error(request, f"Failed. You scored {score}/{total}. You need 2/2 correct to verify.")
+            # Failed - Force regenerate
+            if f'quiz_{movie_id}' in request.session:
+                del request.session[f'quiz_{movie_id}']
+            messages.error(request, f"Incorrect answer. Generating a new question...")
             return redirect('take-quiz', movie_id=movie_id)
 
     else:
@@ -159,9 +198,36 @@ def take_quiz(request, movie_id):
                 print("DEBUG: AI generation failed. Returning error instead of backup.")
                 messages.warning(request, "AI is currently busy generating story questions. Please try again in 5 seconds.")
                 return redirect('movie-detail', movie_id=movie_id)
+            
+            # CRITICAL FIX: Store in session
+            request.session[f'quiz_{movie_id}'] = quiz_data
+            request.session.save()
+            print(f"DEBUG: Saved quiz to session for movie {movie_id}")
         
         print(f"DEBUG: Rendering Quiz with data: {quiz_data}") # Check structure here
         return render(request, 'movies/quiz.html', {'movie': movie, 'questions': quiz_data})
+
+@login_required
+def fan_corner(request):
+    from django.contrib.auth.models import User
+    from django.db.models import Count
+    from movies.models import Watched
+
+    # Leaderboard: Top 10 users with most watched movies
+    leaderboard = User.objects.annotate(
+        watched_count=Count('watched')
+    ).order_by('-watched_count')[:10]
+    
+    # User's own stats
+    user_stats = {
+        'count': Watched.objects.filter(user=request.user).count(),
+        'rank': list(leaderboard).index(request.user) + 1 if request.user in leaderboard else 'N/A'
+    }
+
+    return render(request, 'movies/fan_corner.html', {
+        'leaderboard': leaderboard,
+        'user_stats': user_stats
+    })
 
 def person_detail(request, person_id):
     service = TMDBService()

@@ -7,40 +7,41 @@
     }
 
     .profile-banner {
-        width: 100%;
-        aspect-ratio: 16 / 9;
-        /* height: auto;  Removed fixed height */
-        background: var(--surface);
-        border-radius: 4px;
-        overflow: hidden;
-        border: 1px solid var(--border);
-        min-height: 200px;
+        position: relative;
+        height: 50vh;
+        max-height: 400px;
+        min-height: 300px;
+        background-size: cover;
+        background-position: center;
+        margin: 0 -20px;
     }
 
-    .profile-banner img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        /* Ensure full image is visible, fill gaps if ratio mismatch */
-        background: #000;
+    .banner-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(18, 18, 18, 0.3) 0%, rgba(18, 18, 18, 0.8) 70%, var(--bg) 100%);
     }
 
     .profile-info {
+        max-width: 1100px;
+        margin: -120px auto 0;
+        padding: 0 20px;
+        position: relative;
+        z-index: 10;
         display: flex;
         align-items: flex-end;
-        padding: 0 40px;
-        margin-top: -60px;
-        position: relative;
+        gap: 30px;
     }
 
     .profile-avatar {
-        width: 120px;
-        height: 120px;
+        width: 150px;
+        height: 150px;
         border-radius: 50%;
         border: 4px solid var(--bg);
         overflow: hidden;
         background: #000;
-        margin-right: 20px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+        flex-shrink: 0;
     }
 
     .profile-avatar img {
@@ -49,15 +50,23 @@
         object-fit: cover;
     }
 
+    .profile-names {
+        flex: 1;
+    }
+
     .profile-names h2 {
-        margin: 0;
+        margin: 0 0 5px 0;
         color: var(--text-main);
         line-height: 1.2;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
     }
 
     .profile-names p {
         margin: 0;
-        color: var(--text-mute);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.1rem;
     }
 
     .stats-bar {
@@ -84,7 +93,6 @@
     .stat-label {
         font-size: 0.8rem;
         color: var(--primary);
-        /* Orange Labels */
         text-transform: uppercase;
         letter-spacing: 1px;
     }
@@ -108,12 +116,9 @@
 </style>
 
 <div class="profile-header">
-    <div class="profile-banner">
-        {% if user.profile.banner_url %}
-        <img src="{{ user.profile.banner_url }}" alt="Banner">
-        {% else %}
-        <div style="width:100%; height:100%; background: linear-gradient(to right, #2c3440, #1e2328);"></div>
-        {% endif %}
+    <div class="profile-banner"
+        style="background-image: url('{% if user.profile.banner_url %}{{ user.profile.banner_url }}{% else %}https://via.placeholder.com/1920x400/2c3440/2c3440{% endif %}');">
+        <div class="banner-overlay"></div>
     </div>
 
     <div class="profile-info">
@@ -124,10 +129,10 @@
             <h2>{{ user.username }}</h2>
             <p>{{ user.profile.bio|default:"No bio yet." }}</p>
         </div>
-        <div style="margin-left: auto; margin-bottom: 5px;">
+        <div style="margin-bottom: 5px;">
             <!-- Toggle Edit Form -->
             <button onclick="document.getElementById('edit-form').style.display='block'" class="btn"
-                style="background: var(--surface); border: 1px solid var(--border); font-size:0.8rem;">Edit
+                style="background: rgba(30, 30, 30, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); font-size:0.8rem; backdrop-filter: blur(10px);">Edit
                 Profile</button>
         </div>
     </div>
@@ -149,23 +154,128 @@
 </div>
 
 <div id="edit-form" class="edit-modal" style="display: none;">
-    <h4 style="color: #fff; margin-top: 0;">Edit Profile</h4>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!-- Manual Form Rendering for styling -->
-        <div class="form-group">
-            <label>Bio</label>
-            {{ p_form.bio }}
-        </div>
-        <div class="form-group">
-            <label>Avatar</label>
-            {{ p_form.avatar }}
-        </div>
-        <button class="btn" type="submit">Save Changes</button>
-        <button type="button" class="btn" style="background: #e74c3c;"
-            onclick="document.getElementById('edit-form').style.display='none'">Cancel</button>
-    </form>
+    <div class="edit-modal-content">
+        <h3
+            style="color: #fff; margin-top: 0; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom:20px;">
+            Edit Profile</h3>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label style="color: var(--text-secondary); margin-bottom: 8px; display:block;">Bio</label>
+                {{ p_form.bio }}
+            </div>
+
+            <div class="form-group">
+                <label style="color: var(--text-secondary); margin-bottom: 8px; display:block;">Avatar</label>
+                <div class="file-upload-wrapper">
+                    {{ p_form.avatar }}
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content: flex-end;">
+                <button type="button" class="btn"
+                    style="background: transparent; border: 1px solid var(--glass-border); color: #ccc;"
+                    onclick="document.getElementById('edit-form').style.display='none'">Cancel</button>
+                <button class="btn btn-primary" type="submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<style>
+    /* Premium Edit Modal */
+    .edit-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 2000;
+        display: flex;
+        /* Hidden by inline style initially */
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .edit-modal-content {
+        background: #1e2025;
+        width: 100%;
+        max-width: 500px;
+        padding: 30px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUpModal {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Form Styling overrides */
+    #id_bio {
+        width: 100%;
+        background: #141619;
+        border: 1px solid #333;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        min-height: 100px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    #id_bio:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: #1a1d21;
+    }
+
+    /* File Input Styling */
+    input[type="file"] {
+        background: #141619;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #333;
+        width: 100%;
+        color: #aaa;
+        cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+        background: var(--surface);
+        color: #fff;
+        border: 1px solid var(--glass-border);
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin-right: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
     <div>

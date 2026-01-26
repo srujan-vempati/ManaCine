@@ -118,7 +118,7 @@ class TMDBService:
         url = f"{self.base_url}/movie/{movie_id}"
         params = {
             'api_key': self.api_key,
-            'append_to_response': 'credits,videos'
+            'append_to_response': 'credits,videos,external_ids,watch/providers'
         }
         
         try:
@@ -146,17 +146,22 @@ class TMDBService:
 
             # Process Genres
             genres = []
-            genre_ids = []
             for g in data.get('genres', []):
                 genres.append(g['name'])
-                genre_ids.append(str(g['id']))
+
+            # Process Watch Providers (India - IN)
+            providers = {}
+            wp = data.get('watch/providers', {}).get('results', {}).get('IN', {})
+            if wp:
+                # Prioritize Flatrate (Streaming) -> Rent -> Buy
+                if 'flatrate' in wp:
+                    providers['stream'] = [{'name': p['provider_name'], 'logo': f"{self.image_base_url}{p['logo_path']}"} for p in wp['flatrate']]
+                if 'rent' in wp:
+                    providers['rent'] = [{'name': p['provider_name'], 'logo': f"{self.image_base_url}{p['logo_path']}"} for p in wp['rent']]
+                providers['link'] = wp.get('link')
 
             # Fetch Similar (Strict Telugu + Same Director/Cast)
-            # Strategy: Discover with People (Director | Top 2 Actors) + Language 'te'
-            # This directly addresses user request to show movies of same director/cast.
             similar = []
-            
-            # Combine Director + Top 2 Cast
             people_ids = director_ids[:1] + [c['id'] for c in cast[:2]]
             people_str = "|".join(str(p) for p in people_ids if p)
 
@@ -169,7 +174,6 @@ class TMDBService:
                     'sort_by': 'popularity.desc',
                     'page': 1,
                 }
-                
                 try:
                      s_resp = self.session.get(similar_url, params=similar_params, timeout=5)
                      s_data = s_resp.json()
@@ -193,10 +197,12 @@ class TMDBService:
                 'release_date': data.get('release_date', 'N/A'),
                 'runtime': data.get('runtime', 0),
                 'rating': data.get('vote_average', 0),
+                'imdb_id': data.get('external_ids', {}).get('imdb_id'),
                 'genres': genres,
                 'directors': directors,
                 'cast': cast,
-                'similar': similar
+                'similar': similar,
+                'providers': providers
             }
             
             cache.set(cache_key, movie_data, 86400)
@@ -309,3 +315,17 @@ class TMDBService:
         except requests.exceptions.RequestException as e:
             print(f"Error searching movies: {e}")
             return []
+
+    def get_movies_by_genre(self, genre_id):
+        if not self.api_key: return []
+        return self._fetch_movies(
+            f"{self.base_url}/discover/movie",
+            {
+                'api_key': self.api_key, 
+                'with_original_language': 'te', 
+                'with_genres': genre_id,
+                'sort_by': 'popularity.desc', 
+                'page': 1
+            },
+            f'genre_{genre_id}_movies'
+        )

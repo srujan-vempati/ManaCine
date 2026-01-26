@@ -10,53 +10,57 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #14181c;
-            --header-bg: #2c3440;
-            --primary: #ff6b00;
-            /* Vivid Orange */
-            --primary-hover: #e65100;
-            --bg: #121212;
-            --surface: #1e1e1e;
+            --bg-color: #0f1014;
+            --surface-color: #1b1e23;
+            --primary: #FF3B30;
+            /* Netflix-like Red/Orange pop */
+            --primary-hover: #e02e24;
             --text-main: #ffffff;
-            --text-mute: #b0b0b0;
-            --border: #333333;
+            --text-secondary: #a1a1a1;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --nav-height: 70px;
         }
 
         body {
-            background-color: var(--bg);
+            background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Graphik', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-family: 'Outfit', sans-serif;
+            /* Use the imported font */
             margin: 0;
-            -webkit-font-smoothing: antialiased;
+            padding-top: var(--nav-height);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(255, 59, 48, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(66, 135, 245, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
         }
 
         a {
             color: var(--text-main);
             text-decoration: none;
-            transition: color 0.2s;
+            transition: all 0.3s ease;
         }
 
-        a:hover {
-            color: var(--primary);
-        }
-
+        /* Glass Navbar */
         .navbar {
-            background: rgba(18, 18, 18, 0.85);
-            /* Translucent dark */
-            backdrop-filter: blur(12px);
-            /* Glass effect */
-            -webkit-backdrop-filter: blur(12px);
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: sticky;
+            background: rgba(15, 16, 20, 0.85);
+            /* Darker translucent */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
             top: 0;
+            width: 100%;
+            height: var(--nav-height);
             z-index: 1000;
-            transition: background 0.3s;
+            display: flex;
+            align-items: center;
         }
 
         .nav-container {
-            max-width: 1200px;
-            /* Wider for better layout */
+            width: 100%;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -66,27 +70,28 @@
 
         .logo {
             font-weight: 800;
-            font-size: 1.6rem;
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            font-size: 1.8rem;
+            letter-spacing: -1px;
+            background: linear-gradient(45deg, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .logo span {
             color: var(--primary);
+            -webkit-text-fill-color: var(--primary);
         }
 
         .nav-center {
             display: flex;
-            gap: 30px;
+            gap: 40px;
         }
 
         .nav-link {
-            color: #ccc;
+            color: var(--text-secondary);
             font-weight: 500;
-            font-size: 0.95rem;
-            transition: color 0.2s;
+            font-size: 1rem;
+            position: relative;
         }
 
         .nav-link:hover,
@@ -94,107 +99,162 @@
             color: #fff;
         }
 
+        /* Animated underline */
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 24px;
         }
 
+        /* Buttons */
         .btn {
-            padding: 8px 20px;
-            border-radius: 4px;
+            padding: 10px 24px;
+            border-radius: 50px;
+            /* Pill shape */
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             border: none;
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #d93025);
             color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
         }
 
         .btn-primary:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 59, 48, 0.4);
         }
 
         .btn-text {
-            background: transparent;
-            color: #ccc;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 20px;
+            border: 1px solid transparent;
         }
 
         .btn-text:hover {
-            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
-        /* Auth UI Enhancements */
+        /* Logout Button Specific */
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+
+        .btn-logout:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+
+        /* Cards & Surfaces */
+        .card-surface {
+            background: var(--surface-color);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
         .auth-card {
-            background: rgba(30, 30, 30, 0.6);
-            /* Semi-transparent surface */
-            backdrop-filter: blur(20px);
-            /* Heavy frost */
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-
-            /* Entrance Animation */
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: translateY(30px);
+            background: rgba(27, 30, 35, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        @keyframes slideUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Modern Input Styling */
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #bbb;
-            font-size: 0.9rem;
-            font-weight: 500;
-            padding-left: 2px;
-        }
-
+        /* Modern Inputs */
         input[type="text"],
         input[type="email"],
-        input[type="password"] {
+        input[type="password"],
+        textarea {
             width: 100%;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid #444;
+            background: #141619;
+            border: 1px solid #333;
             color: #fff;
-            padding: 14px 16px;
-            border-radius: 10px;
-            /* Softer corners */
+            padding: 16px;
+            border-radius: 12px;
             font-size: 1rem;
-            transition: all 0.25s ease;
+            font-family: inherit;
+            transition: all 0.3s;
             box-sizing: border-box;
         }
 
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="password"]:focus {
+        input:focus,
+        textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
-            /* Subtle glow ring */
-            background: rgba(0, 0, 0, 0.4);
-            transform: scale(1.01);
-            /* Micro-interaction */
+            background: #1a1d21;
+            box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.1);
+        }
+
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        .alert-info {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .alert-warning {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+            border: 1px solid rgba(241, 196, 15, 0.3);
         }
     </style>
 </head>
@@ -206,10 +266,7 @@
 
             <div class="nav-center">
                 <a href="/" class="nav-link">Home</a>
-                <a href="/?q=" class="nav-link">Movies</a> <!-- Simple way to browse all -->
-                {% if user.is_authenticated %}
-                <a href="{% url 'profile' %}" class="nav-link">My List</a>
-                {% endif %}
+                <a href="{% url 'fan-corner' %}" class="nav-link">Fan Corner</a>
             </div>
 
             <div class="nav-right">

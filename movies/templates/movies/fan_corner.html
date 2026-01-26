@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .fan-header {
+        text-align: center;
+        margin-bottom: 50px;
+        padding: 60px 20px;
+        background: radial-gradient(circle, rgba(255, 59, 48, 0.1) 0%, transparent 70%);
+        border-radius: 20px;
+    }
+
+    .fan-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0;
+        background: linear-gradient(to right, #fff, #ccc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .fan-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-top: 10px;
+    }
+
+    .leaderboard-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 40px;
+    }
+
+    .leaderboard-card {
+        background: var(--surface-color);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 30px;
+    }
+
+    .rank-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .rank-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.2s;
+        border-radius: 8px;
+    }
+
+    .rank-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .rank-num {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        width: 40px;
+        text-align: center;
+    }
+
+    .rank-num.top-3 {
+        color: var(--primary);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin: 0 20px;
+        border: 2px solid var(--surface-color);
+    }
+
+    .rank-1 .user-avatar {
+        border-color: #ffd700;
+    }
+
+    .rank-2 .user-avatar {
+        border-color: #c0c0c0;
+    }
+
+    .rank-3 .user-avatar {
+        border-color: #cd7f32;
+    }
+
+    .user-info {
+        flex: 1;
+    }
+
+    .user-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(0, 0, 0, 0));
+        border: 1px solid rgba(255, 59, 48, 0.2);
+        padding: 30px;
+        border-radius: 16px;
+        text-align: center;
+        height: fit-content;
+    }
+
+    .stat-value {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    @media (max-width: 768px) {
+        .leaderboard-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="fan-header">
+    <h1 class="fan-title">Fan Corner</h1>
+    <p class="fan-subtitle">Top contributors to the ManaCine community</p>
+</div>
+
+<div class="leaderboard-container">
+    <div class="leaderboard-card">
+        <h3 style="margin-top:0; margin-bottom:20px; font-size:1.4rem;">Top Watchers</h3>
+        <ul class="rank-list">
+            {% for u in leaderboard %}
+            <li class="rank-item {% if forloop.counter <= 3 %}rank-{{forloop.counter}}{% endif %}">
+                <span class="rank-num {% if forloop.counter <= 3 %}top-3{% endif %}">#{{ forloop.counter }}</span>
+                <div class="user-avatar">
+                    {{ u.username|make_list|first|upper }}
+                </div>
+                <div class="user-info">
+                    <div class="user-name">{{ u.username }}</div>
+                    <div style="font-size:0.85rem; color:#666;">Joined {{ u.date_joined|date:"M Y" }}</div>
+                </div>
+                <div style="font-weight:600; color:#fff;">
+                    {{ u.watched_count }} <span style="font-size:0.8rem; color:#666;">movies</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="stats-card">
+        <h3>Your Stats</h3>
+
+        <div style="margin: 30px 0;">
+            <div class="stat-value">{{ user_stats.count }}</div>
+            <div class="stat-label">Movies Watched</div>
+        </div>
+
+        {% if user_stats.rank != 'N/A' %}
+        <div style="margin: 30px 0;">
+            <div class="stat-value">#{{ user_stats.rank }}</div>
+            <div class="stat-label">Rank</div>
+        </div>
+        {% else %}
+        <p style="color:#666;">Watch more movies to enter the leaderboard!</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
