@@ -1,26 +1,28 @@
 import json
+import os
 import requests
 import random
 
 class QuizService:
     def __init__(self):
         # Ollama local endpoint
-        self.api_url = "https://unsanguine-rosette-impressibly.ngrok-free.dev/api/generate"
+        # Ollama remote endpoint (User provided)
+        self.api_url = os.environ.get("OLLAMA_API_URL", "https://unsanguine-rosette-impressibly.ngrok-free.dev/api/generate")
         self.model = "llama3.2" # Using the user-approved small model
 
     def generate_quiz(self, movie_title, movie_overview):
         print(f"DEBUG: Generating quiz for '{movie_title}' using Ollama ({self.model})...")
 
         prompt = f"""
-        Read the movie description below and generate 1 multiple-choice question based ONLY on it.
+        Read the movie description below and generate 1 TRICKY and INTELLECTUAL multiple-choice question based ONLY on it.
         
         MOVIE DESCRIPTION:
         "{movie_overview}"
         
         REQUIREMENTS:
-        1. Question MUST be based on the text above.
-        2. Verify that the user paid attention to the plot.
-        3. 4 options (1 correct, 3 wrong).
+        1. Question MUST be based on the specific plot details, not generic tropes.
+        2. Make it challenging. Ask about a specific event, a character's motive, or a plot twist.
+        3. 4 options (1 correct, 3 plausible but wrong).
         
         JSON FORMAT ONLY:
         {{
@@ -28,7 +30,7 @@ class QuizService:
             "options": ["Option A", "Option B", "Option C", "Option D"],
             "correct_answer": "Option A"
         }}
-        IMPORTANT: "correct_answer" MUST be one of the exact strings from "options", NOT just "A" or "B".
+        IMPORTANT: "correct_answer" MUST be one of the exact strings from "options".
         """
 
         payload = {
@@ -45,8 +47,10 @@ class QuizService:
         }
 
         try:
-            # High timeout because local inference can be slow on CPU
-            response = requests.post(self.api_url, json=payload, timeout=60)
+            # High timeout because remote inference can be slow
+            # Add header to skip ngrok browser warning
+            headers = {"ngrok-skip-browser-warning": "true"}
+            response = requests.post(self.api_url, json=payload, headers=headers, timeout=180)
             response.raise_for_status()
             
             data = response.json()

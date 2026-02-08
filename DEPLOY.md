@@ -27,4 +27,18 @@ To expose your local server to the internet for testing:
     ```bash
     ngrok http 8000
     ```
-4.  Copy the URL (e.g., `https://random-name.ngrok-free.app`) and use it. We have already configured `ALLOWED_HOSTS` to accept it.
+30: 4.  Copy the URL (e.g., `https://random-name.ngrok-free.app`) and use it. We have already configured `ALLOWED_HOSTS` to accept it.
+31: 
+32: ## 3. Setting up AI Quiz Service (Ollama)
+33: To enable the AI quiz generation feature locally:
+34: 
+35: 1.  **Install Ollama**: Follow instructions at [ollama.com](https://ollama.com).
+36: 2.  **Pull the Model**:
+37:     ```bash
+38:     ollama pull llama3.2
+39:     ```
+40: 3.  **Start the Server**:
+41:     ```bash
+42:     ollama serve
+43:     ```
+44: The application is configured to connect to `http://localhost:11434` by default.

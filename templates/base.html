@@ -69,11 +69,10 @@
         }
 
         .logo {
-            font-weight: 800;
-            font-size: 1.8rem;
             letter-spacing: -1px;
             background: linear-gradient(45deg, #fff, #ccc);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -256,6 +255,120 @@
             color: #f1c40f;
             border: 1px solid rgba(241, 196, 15, 0.3);
         }
+
+        /* Mobile Hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 5px;
+            z-index: 1001;
+        }
+
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        /* Mobile Responsive Nav */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .nav-container {
+                padding: 0 20px;
+            }
+
+            .nav-center,
+            .nav-right {
+                position: fixed;
+                top: var(--nav-height);
+                left: -100%;
+                width: 100%;
+                background: rgba(15, 16, 20, 0.95);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                padding: 20px;
+                transition: left 0.3s ease;
+                border-bottom: 1px solid var(--glass-border);
+            }
+
+            .nav-center {
+                /* Combine center and right for mobile vertical list */
+                height: auto;
+                gap: 20px;
+                border-bottom: none;
+                z-index: 999;
+            }
+
+            .nav-right {
+                top: calc(var(--nav-height) + 120px);
+                /* Adjust based on items */
+                border-top: 1px solid var(--glass-border);
+                justify-content: center;
+                z-index: 999;
+            }
+
+            .nav-active .nav-center,
+            .nav-active .nav-right {
+                left: 0;
+            }
+
+            /* Merge navs visually for mobile */
+            .nav-center {
+                top: 70px;
+                padding-bottom: 10px;
+            }
+
+            .nav-right {
+                top: auto;
+                position: static;
+                width: auto;
+                background: transparent;
+                border: none;
+                padding: 0;
+                margin-top: 20px;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background: rgba(15, 16, 20, 0.98);
+                backdrop-filter: blur(20px);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                padding-top: 40px;
+                transition: 0.3s;
+                z-index: 998;
+            }
+
+            .mobile-menu.active {
+                left: 0;
+            }
+
+            .mobile-menu a {
+                font-size: 1.2rem;
+                margin: 15px 0;
+            }
+
+            /* Hide original desktop navs */
+            .nav-center,
+            .nav-right {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -264,6 +377,7 @@
         <div class="nav-container">
             <a href="/" class="logo">Mana<span>Cine</span></a>
 
+            <!-- Desktop Nav -->
             <div class="nav-center">
                 <a href="/" class="nav-link">Home</a>
                 <a href="{% url 'fan-corner' %}" class="nav-link">Fan Corner</a>
@@ -272,7 +386,6 @@
             <div class="nav-right">
                 {% if user.is_authenticated %}
                 <a href="{% url 'profile' %}" style="display:flex; align-items:center; gap:10px; color:#fff;">
-                    <!-- Simple Avatar Circle -->
                     <div
                         style="width:32px; height:32px; background:var(--surface); border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #444;">
                         {{ user.username|make_list|first|upper }}
@@ -288,8 +401,150 @@
                 <a href="{% url 'register' %}" class="btn btn-primary">Join Now</a>
                 {% endif %}
             </div>
+
+            <!-- Hamburger Icon -->
+            <div class="hamburger" onclick="toggleMenu()">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
         </div>
     </nav>
+
+    <!-- Mobile Menu Container -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/" class="nav-link">Home</a>
+        <a href="{% url 'fan-corner' %}" class="nav-link">Fan Corner</a>
+        <div style="margin: 20px 0; width: 80%; height: 1px; background: rgba(255,255,255,0.1);"></div>
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}" class="nav-link">Profile ({{ user.username }})</a>
+        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn-text" style="font-size:1.1rem; margin-top:10px;">Logout</button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}" class="btn-text" style="margin-bottom:10px;">Sign In</a>
+        <a href="{% url 'register' %}" class="btn btn-primary">Join Now</a>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+    </script>
+
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'fan-corner' %}" class="nav-item {% if '/fan-corner/' in request.path %}active{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+            </svg>
+            <span>Fan Corner</span>
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}" class="nav-item {% if '/profile/' in request.path %}active{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Profile</span>
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            <span>Login</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <style>
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 16, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            justify-content: space-around;
+            align-items: center;
+            z-index: 2000;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 0.75rem;
+            gap: 4px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .nav-item svg {
+            transition: all 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active svg {
+            transform: translateY(-2px);
+            stroke: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .bottom-nav {
+                display: flex;
+            }
+
+            /* Hide Top Nav Elements on Mobile */
+            .navbar {
+                display: none;
+                /* Hide entire top bar on mobile as per user preference for 'app-like' feel, or simplify it */
+            }
+
+            .navbar {
+                /* Actually keeping top bar for logo but hiding nav items is better */
+                display: flex;
+            }
+
+            .hamburger {
+                display: none;
+                /* Hide hamburger since we have bottom nav */
+            }
+
+            body {
+                padding-bottom: 80px;
+                /* Space for bottom nav */
+            }
+        }
+    </style>
 
     <div class="container">
         {% if messages %}

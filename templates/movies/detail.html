@@ -278,6 +278,41 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
+    /* Mobile Responsive Details */
+    @media (max-width: 768px) {
+        .movie-header-section {
+            grid-template-columns: 1fr;
+            margin-top: -60px;
+            gap: 20px;
+        }
+
+        .poster-wrapper {
+            width: 180px;
+            margin: 0 auto;
+        }
+
+        .header-info {
+            text-align: center;
+        }
+
+        .header-info h1 {
+            font-size: 2rem;
+        }
+
+        .header-meta {
+            justify-content: center;
+        }
+
+        .action-bar {
+            justify-content: center;
+        }
+
+        .main-grid {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+    }
 </style>
 
 {% if movie %}
@@ -305,7 +340,8 @@
                 <span class="meta-tag">{{ movie.release_date|slice:":4" }}</span>
                 {% endif %}
                 <span class="meta-tag">{{ movie.runtime }} min</span>
-                <span class="meta-tag" style="border-color: var(--primary); color: var(--primary);">★ {{movie.rating|floatformat:1 }}</span>
+                <span class="meta-tag" style="border-color: var(--primary); color: var(--primary);">★
+                    {{movie.rating|floatformat:1 }}</span>
 
                 {% if movie.imdb_id %}
                 <a href="https://www.imdb.com/title/{{ movie.imdb_id }}" target="_blank" class="imdb-tag">IMDb</a>
@@ -325,6 +361,13 @@
                 <a href="{% url 'toggle-watched' movie.id %}" class="btn-action {% if is_watched %}active{% endif %}">
                     {% if is_watched %}👁 Watched{% else %}👁 Mark Watched{% endif %}
                 </a>
+
+                <!-- Set Banner (New Feature) -->
+                {% if user.is_authenticated %}
+                <a href="{% url 'set-banner' movie.id %}" class="btn-action">
+                    🖼 Set as Banner
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>

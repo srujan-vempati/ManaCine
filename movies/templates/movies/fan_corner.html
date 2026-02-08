@@ -17,6 +17,7 @@
         margin: 0;
         background: linear-gradient(to right, #fff, #ccc);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
@@ -129,6 +130,50 @@
     @media (max-width: 768px) {
         .leaderboard-container {
             grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .fan-header {
+            padding: 30px 15px;
+            margin-bottom: 30px;
+        }
+
+        .fan-title {
+            font-size: 2rem;
+        }
+
+        .fan-subtitle {
+            font-size: 1rem;
+        }
+
+        .leaderboard-card {
+            padding: 20px;
+        }
+
+        .rank-item {
+            padding: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            margin: 0 12px;
+            font-size: 0.8rem;
+        }
+
+        .rank-num {
+            font-size: 1.2rem;
+            width: 30px;
+        }
+
+        .user-name {
+            font-size: 1rem;
+        }
+
+        .stats-card {
+            order: -1;
+            /* Show user stats at top on mobile? User might prefer seeing leaderboard first. Keeping default order (leaderboard first) */
+            margin-top: 0;
         }
     }
 </style>
