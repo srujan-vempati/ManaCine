@@ -6,32 +6,40 @@ from .forms import ReviewForm
 
 @login_required
 def add_review(request, movie_id):
-    from movies.models import Watched # Import here to avoid circular import if any
-    
+    from movies.models import Watched  # Import here to avoid circular import if any
+
     if request.method == 'POST':
         # Enforce Watched check
         if not Watched.objects.filter(user=request.user, movie_id=movie_id).exists():
             messages.error(request, 'You must mark this movie as "Watched" before you can review it.')
             return redirect('movie-detail', movie_id=movie_id)
 
+        # Block duplicate reviews — user must use edit instead
+        if Review.objects.filter(user=request.user, movie_id=movie_id).exists():
+            messages.warning(request, 'You have already reviewed this movie. Use the edit option to update your review.')
+            return redirect('movie-detail', movie_id=movie_id)
+
         form = ReviewForm(request.POST)
         if form.is_valid():
-            # Check if user already reviewed?
-            existing_review = Review.objects.filter(user=request.user, movie_id=movie_id).first()
-            if existing_review:
-                messages.warning(request, 'You have already reviewed this movie. Review updated.')
-                existing_review.content = form.cleaned_data['content']
-                existing_review.rating = form.cleaned_data['rating']
-                existing_review.music_rating = form.cleaned_data.get('music_rating')
-                existing_review.direction_rating = form.cleaned_data.get('direction_rating')
-                existing_review.acting_rating = form.cleaned_data.get('acting_rating')
-                existing_review.cinematography_rating = form.cleaned_data.get('cinematography_rating')
-                existing_review.save()
-            else:
-                review = form.save(commit=False)
-                review.user = request.user
-                review.movie_id = movie_id
-                review.save()
-                messages.success(request, 'Review posted successfully!')
-    
+            review = form.save(commit=False)
+            review.user = request.user
+            review.movie_id = movie_id
+            review.save()
+            messages.success(request, 'Review posted successfully!')
+
     return redirect('movie-detail', movie_id=movie_id)
+
+
+@login_required
+def edit_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id, user=request.user)
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your review has been updated!')
+        else:
+            messages.error(request, 'There was an error updating your review.')
+
+    return redirect('movie-detail', movie_id=review.movie_id)

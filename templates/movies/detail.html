@@ -279,6 +279,62 @@
         text-overflow: ellipsis;
     }
 
+    /* Star Rating */
+    .rating-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .rating-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .rating-label {
+        color: #bbb;
+        font-size: 0.9rem;
+    }
+
+    .star-rating {
+        direction: rtl;
+        display: inline-flex;
+    }
+
+    .star-rating input {
+        display: none;
+    }
+
+    .star-rating label {
+        color: #444;
+        font-size: 1.5rem;
+        padding: 0 2px;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .star-rating label:before {
+        content: "★";
+    }
+
+    .star-rating label:hover,
+    .star-rating label:hover~label {
+        color: #ffbf00;
+    }
+
+    .star-rating input:checked~label {
+        color: #ffbf00;
+    }
+
+    .overall-rating .star-rating label {
+        font-size: 2rem;
+    }
+
     /* Mobile Responsive Details */
     @media (max-width: 768px) {
         .movie-header-section {
@@ -362,7 +418,7 @@
                     {% if is_watched %}👁 Watched{% else %}👁 Mark Watched{% endif %}
                 </a>
 
-                <!-- Set Banner (New Feature) -->
+                <!-- Set Banner -->
                 {% if user.is_authenticated %}
                 <a href="{% url 'set-banner' movie.id %}" class="btn-action">
                     🖼 Set as Banner
@@ -409,7 +465,6 @@
 
             <div style="margin-bottom: 30px;"></div>
             {% endif %}
-
 
             <span class="section-label">Directed By</span>
             <div class="crew-grid">
@@ -460,75 +515,100 @@
     <!-- User Reviews (Full Width) -->
     <div style="margin-top: 60px; margin-bottom: 60px; max-width: 800px;">
         <span class="section-label">User Reviews</span>
+
         {% if user.is_authenticated %}
         {% if is_watched %}
+        {% if user_review %}
+        <!-- ── Edit existing review ── -->
+        <form method="post" action="{% url 'edit-review' user_review.id %}" class="review-form"
+            style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px;">
+            {% csrf_token %}
+            <h4 style="margin-top:0; margin-bottom: 15px; color:#fff;">✏️ Edit Your Review</h4>
+            <div class="rating-grid">
+                <div class="rating-row overall-rating"
+                    style="grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 5px;">
+                    <span class="rating-label" style="color: #fff; font-weight: bold; font-size: 1.1rem;">Overall Rating
+                        *</span>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" {% if user_review.rating == 5 %}checked{% endif %} required /><label for="star5" title="5 stars"></label>
+                        <input type="radio" id="star4" name="rating" value="4" {% if user_review.rating == 4 %}checked{% endif %} /><label for="star4" title="4 stars"></label>
+                        <input type="radio" id="star3" name="rating" value="3" {% if user_review.rating == 3 %}checked{% endif %} /><label for="star3" title="3 stars"></label>
+                        <input type="radio" id="star2" name="rating" value="2" {% if user_review.rating == 2 %}checked{% endif %} /><label for="star2" title="2 stars"></label>
+                        <input type="radio" id="star1" name="rating" value="1" {% if user_review.rating == 1 %}checked{% endif %} /><label for="star1" title="1 star"></label>
+                    </div>
+                </div>
+                <div class="rating-row">
+                    <span class="rating-label">Music</span>
+                    <div class="star-rating">
+                        <input type="radio" id="m_star5" name="music_rating" value="5" {% if user_review.music_rating == 5 %}checked{% endif %} /><label for="m_star5" title="5 stars"></label>
+                        <input type="radio" id="m_star4" name="music_rating" value="4" {% if user_review.music_rating == 4 %}checked{% endif %} /><label for="m_star4" title="4 stars"></label>
+                        <input type="radio" id="m_star3" name="music_rating" value="3" {% if user_review.music_rating == 3 %}checked{% endif %} /><label for="m_star3" title="3 stars"></label>
+                        <input type="radio" id="m_star2" name="music_rating" value="2" {% if user_review.music_rating == 2 %}checked{% endif %} /><label for="m_star2" title="2 stars"></label>
+                        <input type="radio" id="m_star1" name="music_rating" value="1" {% if user_review.music_rating == 1 %}checked{% endif %} /><label for="m_star1" title="1 star"></label>
+                    </div>
+                </div>
+                <div class="rating-row">
+                    <span class="rating-label">Direction</span>
+                    <div class="star-rating">
+                        <input type="radio" id="d_star5" name="direction_rating" value="5" {% if user_review.direction_rating == 5 %}checked{% endif %} /><label for="d_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="d_star4" name="direction_rating" value="4" {% if user_review.direction_rating == 4 %}checked{% endif %} /><label for="d_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="d_star3" name="direction_rating" value="3" {% if user_review.direction_rating == 3 %}checked{% endif %} /><label for="d_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="d_star2" name="direction_rating" value="2" {% if user_review.direction_rating == 2 %}checked{% endif %} /><label for="d_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="d_star1" name="direction_rating" value="1" {% if user_review.direction_rating == 1 %}checked{% endif %} /><label for="d_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
+                <div class="rating-row">
+                    <span class="rating-label">Acting</span>
+                    <div class="star-rating">
+                        <input type="radio" id="a_star5" name="acting_rating" value="5" {% if user_review.acting_rating == 5 %}checked{% endif %} /><label for="a_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="a_star4" name="acting_rating" value="4" {% if user_review.acting_rating == 4 %}checked{% endif %} /><label for="a_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="a_star3" name="acting_rating" value="3" {% if user_review.acting_rating == 3 %}checked{% endif %} /><label for="a_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="a_star2" name="acting_rating" value="2" {% if user_review.acting_rating == 2 %}checked{% endif %} /><label for="a_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="a_star1" name="acting_rating" value="1" {% if user_review.acting_rating == 1 %}checked{% endif %} /><label for="a_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
+                <div class="rating-row">
+                    <span class="rating-label">Cinematography</span>
+                    <div class="star-rating">
+                        <input type="radio" id="c_star5" name="cinematography_rating" value="5" {% if user_review.cinematography_rating == 5 %}checked{% endif %} /><label for="c_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="c_star4" name="cinematography_rating" value="4" {% if user_review.cinematography_rating == 4 %}checked{% endif %} /><label for="c_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="c_star3" name="cinematography_rating" value="3" {% if user_review.cinematography_rating == 3 %}checked{% endif %} /><label for="c_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="c_star2" name="cinematography_rating" value="2" {% if user_review.cinematography_rating == 2 %}checked{% endif %} /><label for="c_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="c_star1" name="cinematography_rating" value="1" {% if user_review.cinematography_rating == 1 %}checked{% endif %} /><label for="c_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#ccc;">Your Review</label>
+                <textarea name="content" rows="4"
+                    style="width:100%; background:#141619; border:1px solid #333; color:#fff; border-radius:8px; padding:12px; font-family:inherit; resize:vertical;">{{ user_review.content }}</textarea>
+            </div>
+            <button type="submit" class="btn-action"
+                style="background:var(--primary); border:none; justify-content:center;">💾 Save Changes</button>
+        </form>
+
+        {% else %}
+        <!-- ── New review ── -->
         <form method="post" action="{% url 'add-review' movie.id %}" class="review-form"
             style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px;">
             {% csrf_token %}
             <h4 style="margin-top:0; margin-bottom: 15px; color:#fff;">Leave a Review</h4>
-            <style>
-                .rating-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 15px;
-                    margin-bottom: 20px;
-                    background: rgba(0, 0, 0, 0.2);
-                    padding: 15px;
-                    border-radius: 8px;
-                }
-
-                .rating-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-
-                .rating-label {
-                    color: #bbb;
-                    font-size: 0.9rem;
-                }
-
-                .star-rating {
-                    direction: rtl;
-                    /* Right to left for CSS hover magic */
-                    display: inline-flex;
-                }
-
-                .star-rating input {
-                    display: none;
-                }
-
-                .star-rating label {
-                    color: #444;
-                    font-size: 1.5rem;
-                    padding: 0 2px;
-                    cursor: pointer;
-                    transition: color 0.2s;
-                }
-
-                .star-rating label:before {
-                    content: "★";
-                }
-
-                /* Hover effects */
-                .star-rating label:hover,
-                .star-rating label:hover~label {
-                    color: #ffbf00;
-                }
-
-                /* Selected state */
-                .star-rating input:checked~label {
-                    color: #ffbf00;
-                }
-
-                /* Make Overall rating larger */
-                .overall-rating .star-rating label {
-                    font-size: 2rem;
-                }
-            </style>
-
             <div class="rating-grid">
-                <!-- Overall -->
                 <div class="rating-row overall-rating"
                     style="grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 5px;">
                     <span class="rating-label" style="color: #fff; font-weight: bold; font-size: 1.1rem;">Overall Rating
@@ -546,8 +626,6 @@
                             title="1 star"></label>
                     </div>
                 </div>
-
-                <!-- Music -->
                 <div class="rating-row">
                     <span class="rating-label">Music</span>
                     <div class="star-rating">
@@ -563,8 +641,6 @@
                             title="1 star"></label>
                     </div>
                 </div>
-
-                <!-- Direction -->
                 <div class="rating-row">
                     <span class="rating-label">Direction</span>
                     <div class="star-rating">
@@ -580,8 +656,6 @@
                             title="1 star"></label>
                     </div>
                 </div>
-
-                <!-- Acting -->
                 <div class="rating-row">
                     <span class="rating-label">Acting</span>
                     <div class="star-rating">
@@ -597,8 +671,6 @@
                             title="1 star"></label>
                     </div>
                 </div>
-
-                <!-- Cinematography -->
                 <div class="rating-row">
                     <span class="rating-label">Cinematography</span>
                     <div class="star-rating">
@@ -615,29 +687,31 @@
                     </div>
                 </div>
             </div>
-
             <div style="margin-bottom: 15px;">
                 <label style="display:block; margin-bottom:5px; color:#ccc;">Your Review</label>
                 <textarea name="content" rows="4"
                     style="width:100%; background:#141619; border:1px solid #333; color:#fff; border-radius:8px; padding:12px; font-family:inherit; resize:vertical;"></textarea>
             </div>
             <button type="submit" class="btn-action"
-                style="background:var(--primary); border:none; justify-content:center;">Post
-                Review</button>
+                style="background:var(--primary); border:none; justify-content:center;">Post Review</button>
         </form>
+        {% endif %}
+
         {% else %}
+        <!-- Not watched yet -->
         <div class="review-form"
             style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; text-align:center;">
             <p style="font-size: 1.1rem; color: #ccc; margin-bottom: 20px;">
-                You need to mark this movie as <strong>Watched</strong> before you can share your
-                review.
+                You need to mark this movie as <strong>Watched</strong> before you can share your review.
             </p>
             <p style="color: var(--text-mute); font-size: 0.9rem;">
                 (Click the "Mark as Watched" button at the top to unlock reviews)
             </p>
         </div>
         {% endif %}
+
         {% else %}
+        <!-- Not logged in -->
         <div class="review-form"
             style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px; text-align:center;">
             <p><a href="{% url 'login' %}" style="color:var(--primary);">Sign in</a> to leave a review.
@@ -649,25 +723,25 @@
         <div class="review-card">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                 <strong style="color: var(--primary);">{{ review.user.username }}</strong>
-                <span style="color: #888; font-size:0.9rem;">{{ review.created_at|date:"M d, Y" }}</span>
+                <span style="color: #888; font-size:0.9rem;">
+                    {{ review.created_at|date:"M d, Y" }}
+                    {% if review.updated_at > review.created_at %}
+                    <span style="color: #666; font-size:0.8rem; font-style: italic;"> · Edited {{
+                        review.updated_at|date:"M d, Y" }}</span>
+                    {% endif %}
+                </span>
             </div>
 
             <div style="margin-bottom:15px; display: flex; flex-direction: column; gap: 8px;">
                 <div style="color: #ffbf00; font-size: 1.2rem;">
-                    {% if review.rating == 5 %}
-                    ★★★★★
-                    {% elif review.rating == 4 %}
-                    ★★★★
-                    {% elif review.rating == 3 %}
-                    ★★★
-                    {% elif review.rating == 2 %}
-                    ★★
-                    {% else %}
-                    ★
+                    {% if review.rating == 5 %}★★★★★
+                    {% elif review.rating == 4 %}★★★★
+                    {% elif review.rating == 3 %}★★★
+                    {% elif review.rating == 2 %}★★
+                    {% else %}★
                     {% endif %}
                 </div>
 
-                <!-- prettier-ignore -->
                 {% if review.music_rating or review.direction_rating or review.acting_rating or review.cinematography_rating %}
                 <div
                     style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
@@ -675,74 +749,31 @@
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="color: #aaa;">Music:</span>
                         <span style="color: #ffbf00;">
-                            {% if review.music_rating == 5 %}
-                            ★★★★★
-                            {% elif review.music_rating == 4 %}
-                            ★★★★
-                            {% elif review.music_rating == 3 %}
-                            ★★★
-                            {% elif review.music_rating == 2 %}
-                            ★★
-                            {% else %}
-                            ★
-                            {% endif %}
+                            {% if review.music_rating == 5 %}★★★★★{% elif review.music_rating == 4 %}★★★★{% elif review.music_rating == 3 %}★★★{% elif review.music_rating == 2 %}★★{% else %}★{% endif %}
                         </span>
                     </div>
                     {% endif %}
-
                     {% if review.direction_rating %}
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="color: #aaa;">Direction:</span>
                         <span style="color: #ffbf00;">
-                            {% if review.direction_rating == 5 %}
-                            ★★★★★
-                            {% elif review.direction_rating == 4 %}
-                            ★★★★
-                            {% elif review.direction_rating == 3 %}
-                            ★★★
-                            {% elif review.direction_rating == 2 %}
-                            ★★
-                            {% else %}
-                            ★
-                            {% endif %}
+                            {% if review.direction_rating == 5 %}★★★★★{% elif review.direction_rating == 4 %}★★★★{% elif review.direction_rating == 3 %}★★★{% elif review.direction_rating == 2 %}★★{% else %}★{% endif %}
                         </span>
                     </div>
                     {% endif %}
-
                     {% if review.acting_rating %}
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="color: #aaa;">Acting:</span>
                         <span style="color: #ffbf00;">
-                            {% if review.acting_rating == 5 %}
-                            ★★★★★
-                            {% elif review.acting_rating == 4 %}
-                            ★★★★
-                            {% elif review.acting_rating == 3 %}
-                            ★★★
-                            {% elif review.acting_rating == 2 %}
-                            ★★
-                            {% else %}
-                            ★
-                            {% endif %}
+                            {% if review.acting_rating == 5 %}★★★★★{% elif review.acting_rating == 4 %}★★★★{% elif review.acting_rating == 3 %}★★★{% elif review.acting_rating == 2 %}★★{% else %}★{% endif %}
                         </span>
                     </div>
                     {% endif %}
-
                     {% if review.cinematography_rating %}
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span style="color: #aaa;">Cinematography:</span>
                         <span style="color: #ffbf00;">
-                            {% if review.cinematography_rating == 5 %}
-                            ★★★★★
-                            {% elif review.cinematography_rating == 4 %}
-                            ★★★★
-                            {% elif review.cinematography_rating == 3 %}
-                            ★★★
-                            {% elif review.cinematography_rating == 2 %}
-                            ★★
-                            {% else %}
-                            ★
-                            {% endif %}
+                            {% if review.cinematography_rating == 5 %}★★★★★{% elif review.cinematography_rating == 4 %}★★★★{% elif review.cinematography_rating == 3 %}★★★{% elif review.cinematography_rating == 2 %}★★{% else %}★{% endif %}
                         </span>
                     </div>
                     {% endif %}

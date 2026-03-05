@@ -62,21 +62,22 @@ def movie_detail(request, movie_id):
     
     is_favorite = False
     is_watched = False
+    user_review = None
     if request.user.is_authenticated:
         from movies.models import Favorite, Watched
         is_favorite = Favorite.objects.filter(user=request.user, movie_id=movie_id).exists()
         is_watched = Watched.objects.filter(user=request.user, movie_id=movie_id).exists()
-    
+        user_review = Review.objects.filter(user=request.user, movie_id=movie_id).first()
     
     form = ReviewForm()
-
 
     return render(request, 'movies/detail.html', {
         'movie': movie, 
         'reviews': reviews,
         'form': form,
         'is_favorite': is_favorite,
-        'is_watched': is_watched
+        'is_watched': is_watched,
+        'user_review': user_review,
     })
 
 @login_required
