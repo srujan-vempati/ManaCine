@@ -7,6 +7,7 @@ class Profile(models.Model):
     avatar = CloudinaryField('image', default='https://res.cloudinary.com/djgau34yl/image/upload/v1/default_avatar.png')
     banner_url = models.URLField(blank=True, null=True, max_length=500)
     bio = models.TextField(blank=True, null=True)
+    fdfs_badge = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.user.username} Profile'

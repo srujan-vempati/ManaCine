@@ -22,6 +22,10 @@ def add_review(request, movie_id):
                 messages.warning(request, 'You have already reviewed this movie. Review updated.')
                 existing_review.content = form.cleaned_data['content']
                 existing_review.rating = form.cleaned_data['rating']
+                existing_review.music_rating = form.cleaned_data.get('music_rating')
+                existing_review.direction_rating = form.cleaned_data.get('direction_rating')
+                existing_review.acting_rating = form.cleaned_data.get('acting_rating')
+                existing_review.cinematography_rating = form.cleaned_data.get('cinematography_rating')
                 existing_review.save()
             else:
                 review = form.save(commit=False)

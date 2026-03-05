@@ -466,52 +466,154 @@
             style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 30px;">
             {% csrf_token %}
             <h4 style="margin-top:0; margin-bottom: 15px; color:#fff;">Leave a Review</h4>
-            <div style="margin-bottom: 20px;">
-                <label style="display:block; margin-bottom:10px; color:#ccc;">Your Rating</label>
+            <style>
+                .rating-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                    margin-bottom: 20px;
+                    background: rgba(0, 0, 0, 0.2);
+                    padding: 15px;
+                    border-radius: 8px;
+                }
 
-                <!-- Star Rating Widget -->
-                <div class="star-rating">
-                    <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stars"></label>
-                    <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars"></label>
-                    <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars"></label>
-                    <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars"></label>
-                    <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star"></label>
+                .rating-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .rating-label {
+                    color: #bbb;
+                    font-size: 0.9rem;
+                }
+
+                .star-rating {
+                    direction: rtl;
+                    /* Right to left for CSS hover magic */
+                    display: inline-flex;
+                }
+
+                .star-rating input {
+                    display: none;
+                }
+
+                .star-rating label {
+                    color: #444;
+                    font-size: 1.5rem;
+                    padding: 0 2px;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                }
+
+                .star-rating label:before {
+                    content: "★";
+                }
+
+                /* Hover effects */
+                .star-rating label:hover,
+                .star-rating label:hover~label {
+                    color: #ffbf00;
+                }
+
+                /* Selected state */
+                .star-rating input:checked~label {
+                    color: #ffbf00;
+                }
+
+                /* Make Overall rating larger */
+                .overall-rating .star-rating label {
+                    font-size: 2rem;
+                }
+            </style>
+
+            <div class="rating-grid">
+                <!-- Overall -->
+                <div class="rating-row overall-rating"
+                    style="grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 5px;">
+                    <span class="rating-label" style="color: #fff; font-weight: bold; font-size: 1.1rem;">Overall Rating
+                        *</span>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required /><label for="star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1"
+                            title="1 star"></label>
+                    </div>
                 </div>
 
-                <style>
-                    .star-rating {
-                        direction: rtl;
-                        /* Right to left for CSS hover magic */
-                        display: inline-flex;
-                    }
+                <!-- Music -->
+                <div class="rating-row">
+                    <span class="rating-label">Music</span>
+                    <div class="star-rating">
+                        <input type="radio" id="m_star5" name="music_rating" value="5" /><label for="m_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="m_star4" name="music_rating" value="4" /><label for="m_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="m_star3" name="music_rating" value="3" /><label for="m_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="m_star2" name="music_rating" value="2" /><label for="m_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="m_star1" name="music_rating" value="1" /><label for="m_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
 
-                    .star-rating input {
-                        display: none;
-                    }
+                <!-- Direction -->
+                <div class="rating-row">
+                    <span class="rating-label">Direction</span>
+                    <div class="star-rating">
+                        <input type="radio" id="d_star5" name="direction_rating" value="5" /><label for="d_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="d_star4" name="direction_rating" value="4" /><label for="d_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="d_star3" name="direction_rating" value="3" /><label for="d_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="d_star2" name="direction_rating" value="2" /><label for="d_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="d_star1" name="direction_rating" value="1" /><label for="d_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
 
-                    .star-rating label {
-                        color: #444;
-                        font-size: 2rem;
-                        padding: 0 2px;
-                        cursor: pointer;
-                        transition: color 0.2s;
-                    }
+                <!-- Acting -->
+                <div class="rating-row">
+                    <span class="rating-label">Acting</span>
+                    <div class="star-rating">
+                        <input type="radio" id="a_star5" name="acting_rating" value="5" /><label for="a_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="a_star4" name="acting_rating" value="4" /><label for="a_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="a_star3" name="acting_rating" value="3" /><label for="a_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="a_star2" name="acting_rating" value="2" /><label for="a_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="a_star1" name="acting_rating" value="1" /><label for="a_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
 
-                    .star-rating label:before {
-                        content: "★";
-                    }
-
-                    /* Hover effects */
-                    .star-rating label:hover,
-                    .star-rating label:hover~label {
-                        color: #ffbf00;
-                    }
-
-                    /* Selected state */
-                    .star-rating input:checked~label {
-                        color: #ffbf00;
-                    }
-                </style>
+                <!-- Cinematography -->
+                <div class="rating-row">
+                    <span class="rating-label">Cinematography</span>
+                    <div class="star-rating">
+                        <input type="radio" id="c_star5" name="cinematography_rating" value="5" /><label for="c_star5"
+                            title="5 stars"></label>
+                        <input type="radio" id="c_star4" name="cinematography_rating" value="4" /><label for="c_star4"
+                            title="4 stars"></label>
+                        <input type="radio" id="c_star3" name="cinematography_rating" value="3" /><label for="c_star3"
+                            title="3 stars"></label>
+                        <input type="radio" id="c_star2" name="cinematography_rating" value="2" /><label for="c_star2"
+                            title="2 stars"></label>
+                        <input type="radio" id="c_star1" name="cinematography_rating" value="1" /><label for="c_star1"
+                            title="1 star"></label>
+                    </div>
+                </div>
             </div>
 
             <div style="margin-bottom: 15px;">
@@ -549,11 +651,105 @@
                 <strong style="color: var(--primary);">{{ review.user.username }}</strong>
                 <span style="color: #888; font-size:0.9rem;">{{ review.created_at|date:"M d, Y" }}</span>
             </div>
-            <div style="margin-bottom:10px; color: #ffbf00;">
-                {% if review.rating == 5 %}★★★★★{% elif review.rating == 4 %}★★★★{% elif review.rating
-                == 3
-                %}★★★{% elif review.rating == 2 %}★★{% else %}★{% endif %}
+
+            <div style="margin-bottom:15px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="color: #ffbf00; font-size: 1.2rem;">
+                    {% if review.rating == 5 %}
+                    ★★★★★
+                    {% elif review.rating == 4 %}
+                    ★★★★
+                    {% elif review.rating == 3 %}
+                    ★★★
+                    {% elif review.rating == 2 %}
+                    ★★
+                    {% else %}
+                    ★
+                    {% endif %}
+                </div>
+
+                <!-- prettier-ignore -->
+                {% if review.music_rating or review.direction_rating or review.acting_rating or review.cinematography_rating %}
+                <div
+                    style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                    {% if review.music_rating %}
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #aaa;">Music:</span>
+                        <span style="color: #ffbf00;">
+                            {% if review.music_rating == 5 %}
+                            ★★★★★
+                            {% elif review.music_rating == 4 %}
+                            ★★★★
+                            {% elif review.music_rating == 3 %}
+                            ★★★
+                            {% elif review.music_rating == 2 %}
+                            ★★
+                            {% else %}
+                            ★
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if review.direction_rating %}
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #aaa;">Direction:</span>
+                        <span style="color: #ffbf00;">
+                            {% if review.direction_rating == 5 %}
+                            ★★★★★
+                            {% elif review.direction_rating == 4 %}
+                            ★★★★
+                            {% elif review.direction_rating == 3 %}
+                            ★★★
+                            {% elif review.direction_rating == 2 %}
+                            ★★
+                            {% else %}
+                            ★
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if review.acting_rating %}
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #aaa;">Acting:</span>
+                        <span style="color: #ffbf00;">
+                            {% if review.acting_rating == 5 %}
+                            ★★★★★
+                            {% elif review.acting_rating == 4 %}
+                            ★★★★
+                            {% elif review.acting_rating == 3 %}
+                            ★★★
+                            {% elif review.acting_rating == 2 %}
+                            ★★
+                            {% else %}
+                            ★
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if review.cinematography_rating %}
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="color: #aaa;">Cinematography:</span>
+                        <span style="color: #ffbf00;">
+                            {% if review.cinematography_rating == 5 %}
+                            ★★★★★
+                            {% elif review.cinematography_rating == 4 %}
+                            ★★★★
+                            {% elif review.cinematography_rating == 3 %}
+                            ★★★
+                            {% elif review.cinematography_rating == 2 %}
+                            ★★
+                            {% else %}
+                            ★
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
+
             <p style="margin:0; color:#ddd; line-height:1.5;">{{ review.content }}</p>
         </div>
         {% empty %}

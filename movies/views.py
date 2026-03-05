@@ -96,6 +96,23 @@ def toggle_favorite(request, movie_id):
             favorite.title = movie.get('title')
             favorite.poster_url = movie.get('poster_url')
             favorite.save()
+
+            # Award FDFS Badge check
+            release_date_str = movie.get('release_date')
+            if release_date_str and release_date_str != 'N/A':
+                try:
+                    from datetime import datetime
+                    from django.utils import timezone
+                    release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
+                    now = timezone.now().date()
+                    days_diff = (now - release_date).days
+                    if 0 <= days_diff <= 7:
+                        request.user.profile.fdfs_badge = True
+                        request.user.profile.save()
+                        messages.success(request, "Congratulations! You earned the FDFS Badge! 🎉")
+                except ValueError:
+                    pass
+
         messages.success(request, 'Added to favorites!')
     
     return redirect('movie-detail', movie_id=movie_id)
@@ -157,11 +174,29 @@ def take_quiz(request, movie_id):
             service = TMDBService()
             movie = service.get_movie_details(movie_id)
             
-            watched = Watched.objects.create(user=request.user, movie_id=movie_id)
-            if movie:
-                watched.title = movie.get('title')
-                watched.poster_url = movie.get('poster_url')
-                watched.save()
+            watches_exist = Watched.objects.filter(user=request.user, movie_id=movie_id).exists()
+            if not watches_exist:
+                watched = Watched.objects.create(user=request.user, movie_id=movie_id)
+                if movie:
+                    watched.title = movie.get('title')
+                    watched.poster_url = movie.get('poster_url')
+                    watched.save()
+                    
+                    # Award FDFS Badge check
+                    release_date_str = movie.get('release_date')
+                    if release_date_str and release_date_str != 'N/A':
+                        try:
+                            from datetime import datetime
+                            from django.utils import timezone
+                            release_date = datetime.strptime(release_date_str, '%Y-%m-%d').date()
+                            now = timezone.now().date()
+                            days_diff = (now - release_date).days
+                            if 0 <= days_diff <= 7:
+                                request.user.profile.fdfs_badge = True
+                                request.user.profile.save()
+                                messages.success(request, "Congratulations! You earned the FDFS Badge! 🎉")
+                        except ValueError:
+                            pass
             
             if f'quiz_{movie_id}' in request.session:
                 del request.session[f'quiz_{movie_id}']
