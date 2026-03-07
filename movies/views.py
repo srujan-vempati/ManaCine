@@ -4,6 +4,10 @@ from reviews.models import Review
 from reviews.forms import ReviewForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Count, Avg, Max, Min
+from django.utils import timezone
+from datetime import timedelta
 
 def home(request):
     service = TMDBService()
@@ -269,3 +273,202 @@ def person_detail(request, person_id):
     service = TMDBService()
     person = service.get_person_details(person_id)
     return render(request, 'movies/person_detail.html', {'person': person})
+
+
+@staff_member_required
+def admin_dashboard(request):
+    from django.contrib.auth.models import User
+    from movies.models import Favorite, Watched
+    from django.db.models.functions import TruncDate, TruncMonth
+
+    now = timezone.now()
+    today = now.date()
+    seven_days_ago = now - timedelta(days=7)
+    thirty_days_ago = now - timedelta(days=30)
+
+    # ── User Analytics ──────────────────────────────────────────────
+    total_users = User.objects.count()
+    active_users = User.objects.filter(last_login__gte=thirty_days_ago).count()
+    new_users_7d = User.objects.filter(date_joined__gte=seven_days_ago).count()
+    new_users_30d = User.objects.filter(date_joined__gte=thirty_days_ago).count()
+    staff_users = User.objects.filter(is_staff=True).count()
+    superusers = User.objects.filter(is_superuser=True).count()
+    inactive_users = total_users - active_users
+
+    # Users registered per day (last 14 days)
+    user_growth = (
+        User.objects
+        .filter(date_joined__gte=now - timedelta(days=14))
+        .annotate(day=TruncDate('date_joined'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+
+    # ── Review Analytics ─────────────────────────────────────────────
+    total_reviews = Review.objects.count()
+    reviews_7d = Review.objects.filter(created_at__gte=seven_days_ago).count()
+    avg_rating = Review.objects.aggregate(avg=Avg('rating'))['avg'] or 0
+    avg_music = Review.objects.aggregate(avg=Avg('music_rating'))['avg'] or 0
+    avg_direction = Review.objects.aggregate(avg=Avg('direction_rating'))['avg'] or 0
+    avg_acting = Review.objects.aggregate(avg=Avg('acting_rating'))['avg'] or 0
+    avg_cinematography = Review.objects.aggregate(avg=Avg('cinematography_rating'))['avg'] or 0
+
+    # Rating distribution
+    rating_distribution = (
+        Review.objects
+        .values('rating')
+        .annotate(count=Count('id'))
+        .order_by('rating')
+    )
+    rating_dist_map = {r['rating']: r['count'] for r in rating_distribution}
+    rating_dist_list = [rating_dist_map.get(i, 0) for i in range(1, 6)]
+
+    # Most reviewed movies
+    most_reviewed_movies = (
+        Review.objects
+        .values('movie_id')
+        .annotate(review_count=Count('id'), avg_rating=Avg('rating'))
+        .order_by('-review_count')[:10]
+    )
+
+    # Top reviewers
+    top_reviewers = (
+        User.objects
+        .annotate(review_count=Count('review'))
+        .filter(review_count__gt=0)
+        .order_by('-review_count')[:10]
+    )
+
+    # ── Favorites Analytics ───────────────────────────────────────────
+    total_favorites = Favorite.objects.count()
+    favorites_7d = Favorite.objects.filter(created_at__gte=seven_days_ago).count()
+
+    most_favorited = (
+        Favorite.objects
+        .values('movie_id', 'title')
+        .annotate(fav_count=Count('id'))
+        .order_by('-fav_count')[:10]
+    )
+
+    users_with_most_favorites = (
+        User.objects
+        .annotate(fav_count=Count('favorite'))
+        .filter(fav_count__gt=0)
+        .order_by('-fav_count')[:10]
+    )
+
+    # ── Watched Analytics ─────────────────────────────────────────────
+    total_watched = Watched.objects.count()
+    watched_7d = Watched.objects.filter(created_at__gte=seven_days_ago).count()
+
+    most_watched_movies = (
+        Watched.objects
+        .values('movie_id', 'title')
+        .annotate(watch_count=Count('id'))
+        .order_by('-watch_count')[:10]
+    )
+
+    top_watchers = (
+        User.objects
+        .annotate(watch_count=Count('watched'))
+        .filter(watch_count__gt=0)
+        .order_by('-watch_count')[:10]
+    )
+
+    # ── FDFS Badge holders ────────────────────────────────────────────
+    from users.models import Profile
+    fdfs_badge_count = Profile.objects.filter(fdfs_badge=True).count()
+    fdfs_badge_holders = Profile.objects.filter(fdfs_badge=True).select_related('user')[:20]
+
+    # ── Recent Activity ───────────────────────────────────────────────
+    recent_reviews_list = Review.objects.select_related('user').order_by('-created_at')[:15]
+    recent_favorites_list = Favorite.objects.select_related('user').order_by('-created_at')[:15]
+    recent_watched_list = Watched.objects.select_related('user').order_by('-created_at')[:15]
+    recent_users_list = User.objects.order_by('-date_joined')[:15]
+
+    # ── All Users Management ──────────────────────────────────────────
+    search_user = request.GET.get('search_user', '').strip()
+    if search_user:
+        all_users = User.objects.filter(
+            username__icontains=search_user
+        ).annotate(
+            review_count=Count('review'),
+            fav_count=Count('favorite'),
+            watch_count=Count('watched')
+        ).order_by('-date_joined')
+    else:
+        all_users = User.objects.annotate(
+            review_count=Count('review'),
+            fav_count=Count('favorite'),
+            watch_count=Count('watched')
+        ).order_by('-date_joined')[:50]
+
+    # Handle admin actions (toggle staff / delete user)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        target_user_id = request.POST.get('user_id')
+        if target_user_id:
+            try:
+                target_user = User.objects.get(pk=target_user_id)
+                if action == 'toggle_staff' and not target_user.is_superuser:
+                    target_user.is_staff = not target_user.is_staff
+                    target_user.save()
+                    messages.success(request, f"Staff status updated for {target_user.username}.")
+                elif action == 'delete_user' and not target_user.is_superuser and target_user != request.user:
+                    target_user.delete()
+                    messages.success(request, f"User deleted.")
+                elif action == 'toggle_active' and not target_user.is_superuser:
+                    target_user.is_active = not target_user.is_active
+                    target_user.save()
+                    messages.success(request, f"Active status updated for {target_user.username}.")
+            except User.DoesNotExist:
+                messages.error(request, "User not found.")
+        return redirect('admin-dashboard')
+
+    context = {
+        # User stats
+        'total_users': total_users,
+        'active_users': active_users,
+        'inactive_users': inactive_users,
+        'new_users_7d': new_users_7d,
+        'new_users_30d': new_users_30d,
+        'staff_users': staff_users,
+        'superusers': superusers,
+        'user_growth': list(user_growth),
+        # Review stats
+        'total_reviews': total_reviews,
+        'reviews_7d': reviews_7d,
+        'avg_rating': round(avg_rating, 2),
+        'avg_music': round(avg_music, 2),
+        'avg_direction': round(avg_direction, 2),
+        'avg_acting': round(avg_acting, 2),
+        'avg_cinematography': round(avg_cinematography, 2),
+        'rating_dist_list': rating_dist_list,
+        'most_reviewed_movies': most_reviewed_movies,
+        'top_reviewers': top_reviewers,
+        # Favorites stats
+        'total_favorites': total_favorites,
+        'favorites_7d': favorites_7d,
+        'most_favorited': most_favorited,
+        'users_with_most_favorites': users_with_most_favorites,
+        # Watched stats
+        'total_watched': total_watched,
+        'watched_7d': watched_7d,
+        'most_watched_movies': most_watched_movies,
+        'top_watchers': top_watchers,
+        # FDFS
+        'fdfs_badge_count': fdfs_badge_count,
+        'fdfs_badge_holders': fdfs_badge_holders,
+        # Recent activity
+        'recent_reviews_list': recent_reviews_list,
+        'recent_favorites_list': recent_favorites_list,
+        'recent_watched_list': recent_watched_list,
+        'recent_users_list': recent_users_list,
+        # User management
+        'all_users': all_users,
+        'search_user': search_user,
+        'now': now,
+    }
+
+    return render(request, 'movies/admin_dashboard.html', context)

@@ -12,4 +12,5 @@ urlpatterns = [
     path('review/<int:review_id>/edit/', review_views.edit_review, name='edit-review'),
     path('person/<int:person_id>/', views.person_detail, name='person-detail'),
     path('fan-corner/', views.fan_corner, name='fan-corner'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
 ]
